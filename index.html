@@ -1,521 +1,251 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HealthRisk AI – Clinical Risk Assistant</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-:root{--navy:#0f2a43;--teal:#14b8a6;--teal2:#0d9488;--red:#e11d48;--amber:#f59e0b;--green:#16a34a;--bg:#f1f5f9;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0}
-*{box-sizing:border-box}
-body{margin:0;font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);display:flex;min-height:100vh}
-#side{width:240px;background:linear-gradient(180deg,var(--navy),#0a1d30);color:#fff;padding:20px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:18px;flex:none}
-.brand{display:flex;gap:10px;align-items:center;padding:0 8px 8px}.brand span{font-size:2rem}
-.brand b{display:block;font-size:1.05rem}.brand small{color:#94a3b8;font-size:.72rem}
-nav{display:flex;flex-direction:column;gap:6px}
-nav button{display:flex;gap:12px;align-items:center;background:transparent;color:#cbd5e1;box-shadow:none;border-radius:12px;padding:12px 14px;font-size:.95rem;font-weight:500;text-align:left}
-nav button i{font-style:normal;font-size:1.2rem}
-nav button:hover{background:#ffffff14;transform:none}
-nav button.on{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;font-weight:600;box-shadow:0 6px 16px #14b8a640}
-#sos{margin-top:auto;background:linear-gradient(135deg,#f43f5e,var(--red));font-weight:700;border-radius:14px;padding:14px;animation:pulse 2s infinite}
-@keyframes pulse{50%{box-shadow:0 0 0 8px #e11d4830}}
-#content{flex:1;padding:24px 32px;max-width:1000px;min-width:0}
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.topbar h1{margin:0;font-size:1.6rem;font-weight:800}
-select{font:500 .9rem 'Inter';padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:#fff}
-.view{animation:pop .3s ease}@keyframes pop{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.card{background:#fff;border-radius:18px;padding:24px;box-shadow:0 1px 3px #0f172a12,0 8px 24px #0f172a0a;margin-bottom:18px;text-align:left}
-#quiz,#result{text-align:center}
-.card h2{margin:0 0 6px;font-size:1.2rem;font-weight:700}
-h3{font-size:1rem;margin:22px 0 8px}
-.muted{color:var(--muted);font-size:.9rem;margin:6px 0}
-button{font:600 .95rem 'Inter';padding:12px 20px;border:0;border-radius:12px;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--teal),var(--teal2));box-shadow:0 4px 12px #0d948840;transition:.15s}
-button:hover{transform:translateY(-1px)}button:disabled{opacity:.45;cursor:not-allowed}
-.ghost{background:#e6f7f5!important;color:var(--teal2)!important;box-shadow:none!important}
-.row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:18px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.hero{text-align:center}
-.qa{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.qa div{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;font-weight:600;transition:.15s}
-.qa div:hover{border-color:var(--teal);background:#f0fdfa}.qa span{display:block;font-size:1.8rem;margin-bottom:6px}
-/* quiz */
-.top{display:flex;align-items:center;gap:12px}
-.progress{flex:1;height:8px;background:var(--line);border-radius:6px;overflow:hidden}
-#bar{height:100%;width:0;background:linear-gradient(90deg,var(--teal),#5eead4);transition:width .4s}
-#step{font-size:.8rem;font-weight:600;color:var(--muted)}
-.icon{font-size:4.5rem;margin:18px auto 6px;width:120px;height:120px;line-height:120px;border-radius:50%;background:linear-gradient(145deg,#ccfbf1,#dbeafe)}
-#q{font-size:1.4rem;line-height:1.4;margin:16px 0 20px}
-#answers{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-#answers button{min-width:140px;font-size:1.4rem;padding:16px 28px}
-.yes{background:linear-gradient(135deg,#22c55e,var(--green))!important}.no{background:linear-gradient(135deg,#fb7185,var(--red))!important}
-.skip{background:#fff!important;color:var(--ink)!important;border:1px solid var(--line);box-shadow:none!important;font-size:1rem!important}
-#answers input,.addrow input{font:600 1rem 'Inter';padding:12px;border-radius:12px;border:2px solid var(--line);outline:none}
-#answers input{font-size:1.6rem;width:140px;text-align:center}
-#answers input:focus,.addrow input:focus{border-color:var(--teal)}
-/* gauge / result */
-.ring{--c:var(--green);width:170px;height:170px;border-radius:50%;margin:6px auto 10px;display:grid;place-items:center;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--line) 0)}
-.ring>div{width:134px;height:134px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.ring b{font-size:2.8rem;line-height:1;font-weight:800}.ring small{color:var(--muted)}
-.ring.Moderate{--c:var(--amber)}.ring.High{--c:#f97316}.ring.Critical{--c:var(--red)}
-.badge{display:inline-block;padding:6px 20px;border-radius:30px;color:#fff;font-weight:700;margin:4px 0 10px}
-.Low{background:var(--green)}.Moderate{background:var(--amber);color:#422006}.High{background:#f97316}.Critical{background:var(--red)}
-.contrib{display:flex;align-items:center;margin:7px 0;text-align:left;font-size:.88rem;gap:10px}
-.contrib span{width:130px;flex:none}.contrib i{display:block;height:11px;border-radius:6px;min-width:6px}
-.inc{background:linear-gradient(90deg,#fda4af,var(--red))}.dec{background:linear-gradient(90deg,#5eead4,var(--teal))}
-.tips{text-align:left;padding:0;list-style:none}
-.tips li{background:#f0fdfa;border-left:4px solid var(--teal);padding:12px 14px;border-radius:10px;margin:8px 0;font-size:.92rem}
-.doc{background:#eff6ff;padding:12px;border-radius:12px}
-/* alerts, chips */
-.alert{background:#fff1f2;border-left:5px solid var(--red);color:#881337;padding:12px 14px;border-radius:10px;margin:8px 0;font-size:.92rem;text-align:left}
-.alert.warn{background:#fffbeb;border-color:var(--amber);color:#78350f}
-.alert.ok{background:#f0fdf4;border-color:var(--green);color:#14532d}
-.chip{padding:3px 10px;border-radius:20px;font-size:.78rem;font-weight:700;background:var(--line)}
-.chip.ok{background:#dcfce7;color:#166534}.chip.warn{background:#fef3c7;color:#92400e}.chip.bad{background:#ffe4e6;color:#9f1239}
-/* scan */
-.drop{display:flex;flex-direction:column;align-items:center;gap:6px;border:2px dashed #94a3b8;border-radius:16px;padding:30px;cursor:pointer;color:var(--muted);font-weight:500;margin-top:12px;transition:.15s}
-.drop:hover{border-color:var(--teal);background:#f0fdfa}.drop span{font-size:2.4rem}
-.prev{display:block;max-width:100%;max-height:260px;margin:14px auto;border-radius:12px;border:1px solid var(--line)}
-.tbl{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.9rem}
-th{text-align:left;color:var(--muted);font-size:.78rem;text-transform:uppercase;padding:8px;border-bottom:2px solid var(--line)}
-td{padding:8px;border-bottom:1px solid var(--line)}td input{width:90px;padding:8px;border:1px solid var(--line);border-radius:8px;font:inherit}
-pre{white-space:pre-wrap;background:#f8fafc;padding:12px;border-radius:10px;font-size:.8rem}
-.addrow{display:flex;gap:10px;margin-top:16px}.addrow input{flex:1}
-.med{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin:8px 0}
-.med small{display:block;color:var(--muted)}.x{background:#f1f5f9!important;color:var(--muted)!important;box-shadow:none!important;padding:6px 12px}
-/* lifestyle */
-.hab{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}
-.hn{font-weight:600}.seg{display:flex;gap:6px;flex-wrap:wrap}
-.pill{background:#fff!important;border:1.5px solid var(--line);color:var(--ink)!important;box-shadow:none!important;padding:8px 14px;font-size:.82rem;border-radius:20px}
-.pill.p0.on{background:var(--green)!important;color:#fff!important;border-color:var(--green)}
-.pill.p1.on{background:var(--amber)!important;color:#fff!important;border-color:var(--amber)}
-.pill.p2.on{background:var(--red)!important;color:#fff!important;border-color:var(--red)}
-.goal{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}.goal input{width:20px;height:20px;margin-top:2px}
-.disclaimer{font-size:.78rem;color:var(--muted);text-align:center;margin:24px 0}
-/* emergency */
-#emergency{position:fixed;inset:0;background:var(--red);color:#fff;z-index:99;padding:24px;overflow:auto;text-align:center;animation:flash 1s infinite}
-@keyframes flash{50%{background:#9f1239}}
-#emergency h1{font-size:2.6rem;margin:10px 0}
-.big{display:block;margin:14px auto;max-width:440px;padding:22px;font-size:1.6rem;font-weight:800;border-radius:20px;text-decoration:none;background:#fff;color:var(--red);box-shadow:0 8px 24px #0004}
-.call2{background:#ffe4e6}
-#hospitals{list-style:none;padding:0;max-width:540px;margin:auto}
-#hospitals li{background:#ffffff26;margin:10px 0;padding:14px;border-radius:14px;text-align:left}
-#hospitals a{color:#fff;font-weight:700;margin-right:14px}
-#emergency .ghost{background:#ffffff30!important;color:#fff!important;margin:6px}
-[hidden]{display:none!important}
-@media(max-width:800px){
- body{flex-direction:column}
- #side{position:fixed;bottom:0;left:0;right:0;top:auto;width:100%;height:auto;flex-direction:row;padding:6px;z-index:50;gap:4px;align-items:center}
- .brand{display:none}nav{flex-direction:row;flex:1;gap:2px}
- nav button{flex-direction:column;gap:2px;padding:6px 2px;font-size:.62rem;flex:1;text-align:center;justify-content:center}
- #sos{margin:0;padding:10px 8px;font-size:.75rem;animation:none}
- #content{padding:16px 14px 90px}.grid{grid-template-columns:1fr}
-}
-
-</style>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HealthRisk AI – Health Assistant</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
-</head>
-<body>
-<aside id="side">
-  <div class="brand"><span>🩺</span><div><b>HealthRisk AI</b><small>Clinical risk assistant</small></div></div>
-  <nav>
-    <button data-v="home" class="on"><i>🏠</i><span>Dashboard</span></button>
-    <button data-v="check"><i>🧪</i><span>Risk Check</span></button>
-    <button data-v="scan"><i>📄</i><span>Scan Reports</span></button>
-    <button data-v="meds"><i>💊</i><span>Medicines</span></button>
-    <button data-v="life"><i>🥗</i><span>Lifestyle</span></button>
-  </nav>
-  <button id="sos">🚨 SOS Emergency</button>
-</aside>
-
-<div id="content">
-  <div class="topbar"><h1 id="title">Dashboard</h1>
-    <select id="lang"><option value="en">English</option><option value="ta">தமிழ்</option><option value="hi">हिन्दी</option></select></div>
-
-  <div class="view" id="v-home"></div>
-
-  <div class="view" id="v-check" hidden>
-    <section class="card" id="quiz">
-      <div class="top"><div class="progress"><div id="bar"></div></div><span id="step"></span></div>
-      <div id="icon" class="icon"></div>
-      <h2 id="q"></h2>
-      <div id="answers"></div>
-      <div class="row"><button id="speak" class="ghost">🔊 Read aloud</button><button id="mic" class="ghost">🎤 Answer by voice</button></div>
-      <p id="heard" class="muted"></p>
-    </section>
-    <section class="card" id="result" hidden></section>
-  </div>
-
-  <div class="view" id="v-scan" hidden>
-    <section class="card">
-      <h2>📄 Scan a lab report or health card</h2>
-      <p class="muted">Upload a clear photo. We read the numbers, <b>you confirm them</b>, then they are used in your risk check.</p>
-      <label class="drop" for="repFile"><span>📷</span>Take a photo or upload an image<input type="file" id="repFile" accept="image/*" hidden></label>
-      <img id="repImg" class="prev" hidden alt="report preview">
-      <div class="row"><button id="repGo" disabled>🔍 Read report</button></div>
-      <p id="repStat" class="muted"></p>
-      <div id="repOut"></div>
-    </section>
-  </div>
-
-  <div class="view" id="v-meds" hidden>
-    <section class="card">
-      <h2>💊 Scan a prescription or medicine strip</h2>
-      <p class="muted">We find known medicines, show what they are for and warn about risky combinations.</p>
-      <label class="drop" for="medFile"><span>📷</span>Take a photo or upload an image<input type="file" id="medFile" accept="image/*" hidden></label>
-      <img id="medImg" class="prev" hidden alt="prescription preview">
-      <div class="row"><button id="medGo" disabled>🔍 Read prescription</button></div>
-      <p id="medStat" class="muted"></p>
-      <div class="addrow"><input id="medIn" placeholder="Or type a medicine name (e.g. Metformin)"><button id="medAdd">Add</button></div>
-    </section>
-    <section class="card"><h2>My medicines</h2><div id="medWarn"></div><div id="medList"></div></section>
-  </div>
-
-  <div class="view" id="v-life" hidden>
-    <section class="card">
-      <h2>🥗 Lifestyle & food habits</h2>
-      <p class="muted">Tap one option for each habit. Be honest – this is only for you.</p>
-      <div id="lifeForm"></div>
-      <div class="row"><button id="lifeGo">📊 Analyse my lifestyle</button></div>
-    </section>
-    <div id="lifeOut"></div>
-  </div>
-
-  <p class="disclaimer">⚠️ HealthRisk AI gives risk awareness only. It is <b>not</b> a medical diagnosis. In an emergency call <b>108</b> or <b>112</b>. Your data stays in this browser.</p>
-</div>
-
-<div id="emergency" hidden>
-  <h1>🚨 EMERGENCY</h1>
-  <p id="why"></p>
-  <a class="big call" href="tel:108">📞 CALL AMBULANCE 108</a>
-  <a class="big call2" href="tel:112">📞 CALL 112</a>
-  <h3>Nearest hospitals</h3>
-  <ul id="hospitals"><li>Finding your location…</li></ul>
-  <button id="stop" class="ghost">Stop siren</button>
-  <button id="close" class="ghost">Close</button>
-</div>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--ink:#0f172a;--mut:#64748b;--line:#e2e8f0;--t:#0d9488;--tx:#fff;--side:#0f2a43;--red:#be123c;--rbg:#fff1f2;--amb:#92400e;--abg:#fffbeb;--ok:#166534;--obg:#f0fdf4;--tbg:#e6f7f5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#0b1220;--card:#131c2e;--ink:#e5edf7;--mut:#94a3b8;--line:#25324a;--t:#2dd4bf;--tx:#06231f;--side:#0a1626;--red:#fda4af;--rbg:#3b1220;--amb:#fcd34d;--abg:#3a2a0a;--ok:#86efac;--obg:#0f2a1a;--tbg:#0f2a2a}}
+:root[data-theme=dark]{color-scheme:dark;--bg:#0b1220;--card:#131c2e;--ink:#e5edf7;--mut:#94a3b8;--line:#25324a;--t:#2dd4bf;--tx:#06231f;--side:#0a1626;--red:#fda4af;--rbg:#3b1220;--amb:#fcd34d;--abg:#3a2a0a;--ok:#86efac;--obg:#0f2a1a;--tbg:#0f2a2a}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);display:flex;min-height:100vh;line-height:1.5}
+:focus-visible{outline:3px solid var(--t);outline-offset:2px}
+#side{width:220px;background:var(--side);color:#e2e8f0;padding:16px 12px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:12px;flex:none}
+.brand{font-weight:800;padding:4px 8px}.brand small{display:block;font-weight:400;color:#94a3b8;font-size:.72rem}
+nav{display:flex;flex-direction:column;gap:4px}
+nav button{display:flex;gap:10px;align-items:center;background:transparent;color:#cbd5e1;border:0;border-radius:10px;padding:11px 12px;font:500 .93rem inherit;text-align:left;cursor:pointer}
+nav button[aria-current=page]{background:var(--t);color:var(--tx);font-weight:700}
+#sos{margin-top:auto;background:#be123c;color:#fff;border:0;border-radius:12px;padding:13px;font-weight:700;cursor:pointer}
+main{flex:1;min-width:0;max-width:900px;padding:20px 24px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+h1{margin:0;font-size:1.5rem}h2{margin:0 0 8px;font-size:1.1rem}h3{font-size:1rem;margin:16px 0 6px}
+select,input,textarea{font:inherit;padding:9px 12px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+input[aria-invalid=true]{border-color:var(--red)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 4px 16px #0f172a10}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mut{color:var(--mut);font-size:.9rem}
+button.b{font:600 .95rem inherit;padding:11px 18px;border:0;border-radius:12px;background:var(--t);color:var(--tx);cursor:pointer}
+button.g{background:var(--tbg);color:var(--t);border:1px solid var(--line)}button.b:disabled{opacity:.5;cursor:not-allowed}
+button.yes{background:#15803d;color:#fff}button.no{background:#b91c1c;color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.al{border-left:5px solid var(--red);background:var(--rbg);color:var(--red);padding:10px 12px;border-radius:10px;margin:8px 0;font-size:.92rem}
+.al.w{border-color:#d97706;background:var(--abg);color:var(--amb)}.al.o{border-color:#16a34a;background:var(--obg);color:var(--ok)}
+.chip{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.78rem;font-weight:700;background:var(--line);margin:2px}
+.av{font-size:4rem;width:100px;height:100px;border-radius:50%;display:grid;place-items:center;background:var(--tbg);animation:bob 3s ease-in-out infinite;flex:none}
+@keyframes bob{50%{transform:translateY(-5px)}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.prof{display:flex;gap:14px;align-items:center}
+.tb{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.88rem}th,td{text-align:left;padding:6px;border-bottom:1px solid var(--line)}td input{width:84px;padding:6px}
+.hab{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line);align-items:center}
+.pill{padding:6px 12px;border-radius:20px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font:inherit;font-size:.82rem}
+.pill[aria-pressed=true]{background:var(--t);color:var(--tx);border-color:var(--t);font-weight:700}
+.big{font-size:1.3rem;text-align:center;margin:14px 0}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--t)}
+.disc{font-size:.78rem;color:var(--mut);text-align:center;margin:18px 0}
+.med{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:6px 0}
+#em{position:fixed;inset:0;background:#9f1239;color:#fff;z-index:99;padding:24px;overflow:auto;text-align:center}
+#em a.c{display:block;margin:12px auto;max-width:420px;padding:18px;border-radius:16px;background:#fff;color:#9f1239;font-weight:800;font-size:1.4rem;text-decoration:none}
+#em li{background:#ffffff26;margin:8px auto;padding:12px;border-radius:12px;text-align:left;max-width:520px;list-style:none}#em li a{color:#fff;font-weight:700;margin-right:12px}
+#em button{margin:6px}[hidden]{display:none!important}
+@media(max-width:800px){body{flex-direction:column}#side{position:fixed;bottom:0;left:0;right:0;top:auto;width:100%;height:auto;flex-direction:row;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));z-index:50}.brand{display:none}nav{flex-direction:row;flex:1;overflow-x:auto}nav button{flex-direction:column;gap:0;padding:6px 4px;font-size:.62rem;flex:1 0 58px;justify-content:center;text-align:center}#sos{margin:0;padding:8px;font-size:.72rem}main{padding:14px 12px 96px}.grid{grid-template-columns:1fr}}
+</style></head><body>
+<aside id="side"><div class="brand">🩺 HealthRisk AI<small>Health assistant</small></div>
+<nav aria-label="Main"></nav><button id="sos" type="button">🚨 SOS</button></aside>
+<main><div class="top"><h1 id="ttl" tabindex="-1">Dashboard</h1><div class="row" style="margin:0">
+<label class="mut" for="lang">Language</label><select id="lang"><option value="en">English</option><option value="ta">தமிழ்</option><option value="hi">हिन्दी</option></select>
+<button class="b g" id="theme" type="button" aria-label="Toggle dark mode">🌓</button></div></div>
+<div id="view"></div>
+<p class="disc">⚠️ HealthRisk AI gives risk awareness only. It is <b>not</b> a medical diagnosis and a normal-looking result does not rule out illness. In an emergency call <b>108</b> or <b>112</b>. Your data stays in this browser (no server in this version).</p></main>
+<div id="em" role="alertdialog" aria-modal="true" aria-label="Emergency" hidden><h1>🚨 EMERGENCY</h1><p id="why"></p>
+<a class="c" href="tel:108">📞 Call ambulance 108</a><a class="c" href="tel:112">📞 Call 112</a>
+<button class="b g" id="hosp" type="button">🏥 Find nearby hospitals (uses your location)</button>
+<ul id="hl" style="padding:0"></ul><button class="b g" id="siren" type="button">🔊 Sound alarm</button><button class="b g" id="emx" type="button">Close</button></div>
 <script>
-const store={get:k=>{try{return JSON.parse(localStorage.getItem('hr_'+k))}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem('hr_'+k,JSON.stringify(v))}catch(e){}}};
-const pre=new Set();
-// ===== HealthRisk AI : voice-guided risk check + emergency system =====
-// Questions: type 'num' (number, can be skipped) or 'yn' (yes/no)
-const Q = [
- {id:'age',t:'num',i:'🎂',en:'How old are you?',ta:'உங்கள் வயது என்ன?',hi:'आपकी उम्र क्या है?'},
- {id:'sbp',t:'num',i:'🩸',en:'Top number of your blood pressure? (skip if unknown)',ta:'இரத்த அழுத்தத்தின் மேல் எண் என்ன? (தெரியாவிட்டால் தவிர்க்கவும்)',hi:'ब्लड प्रेशर का ऊपर वाला नंबर? (पता न हो तो छोड़ें)'},
- {id:'glucose',t:'num',i:'🍬',en:'Blood sugar value? (skip if unknown)',ta:'இரத்த சர்க்கரை அளவு? (தெரியாவிட்டால் தவிர்க்கவும்)',hi:'ब्लड शुगर कितना है? (पता न हो तो छोड़ें)'},
- {id:'spo2',t:'num',i:'🫁',en:'Oxygen level (SpO2) if you have a meter?',ta:'ஆக்சிஜன் அளவு (SpO2)?',hi:'ऑक्सीजन लेवल (SpO2)?'},
- {id:'chest',t:'yn',i:'💔',en:'Do you have chest pain now?',ta:'இப்போது நெஞ்சு வலி உள்ளதா?',hi:'क्या अभी सीने में दर्द है?'},
- {id:'sweat',t:'yn',i:'😓',en:'Are you sweating a lot or feeling faint?',ta:'அதிகமாக வியர்க்கிறதா அல்லது மயக்கமா?',hi:'क्या बहुत पसीना या चक्कर आ रहा है?'},
- {id:'breath',t:'yn',i:'😮‍💨',en:'Do you have severe difficulty breathing?',ta:'மூச்சு விட மிகவும் சிரமமா?',hi:'क्या सांस लेने में बहुत तकलीफ है?'},
- {id:'face',t:'yn',i:'🙂',en:'Is one side of your face drooping, or is your speech slurred?',ta:'முகம் ஒரு பக்கம் கோணுகிறதா அல்லது பேச்சு குழறுகிறதா?',hi:'क्या चेहरा एक तरफ झुका है या बोलने में दिक्कत है?'},
- {id:'arm',t:'yn',i:'💪',en:'Is one arm or leg suddenly weak?',ta:'ஒரு கை அல்லது கால் திடீரென பலவீனமா?',hi:'क्या एक हाथ या पैर अचानक कमजोर है?'},
- {id:'diab',t:'yn',i:'🩺',en:'Do you have diabetes?',ta:'உங்களுக்கு சர்க்கரை நோய் உள்ளதா?',hi:'क्या आपको डायबिटीज है?'},
- {id:'htn',t:'yn',i:'❤️',en:'Do you have high blood pressure?',ta:'உங்களுக்கு உயர் இரத்த அழுத்தம் உள்ளதா?',hi:'क्या आपको हाई बीपी है?'},
- {id:'smoke',t:'yn',i:'🚬',en:'Do you smoke, drink alcohol or chew tobacco?',ta:'புகை, மது அல்லது புகையிலை பழக்கம் உள்ளதா?',hi:'क्या आप धूम्रपान, शराब या तंबाकू लेते हैं?'},
- {id:'sweets',t:'yn',i:'🍰',en:'Do you eat sweets or drink sugary drinks daily?',ta:'தினமும் இனிப்பு அல்லது சர்க்கரை பானங்கள் எடுக்கிறீர்களா?',hi:'क्या आप रोज़ मिठाई या मीठे पेय लेते हैं?'},
- {id:'fried',t:'yn',i:'🍟',en:'Do you eat fried food, pickles or extra salt often?',ta:'எண்ணெய் பலகாரம், ஊறுகாய், அதிக உப்பு அடிக்கடி எடுக்கிறீர்களா?',hi:'क्या आप तला खाना, अचार या ज्यादा नमक अक्सर लेते हैं?'},
- {id:'exercise',t:'yn',i:'🚶',en:'Do you walk or exercise at least 30 minutes a day?',ta:'தினமும் 30 நிமிடம் நடை அல்லது உடற்பயிற்சி செய்கிறீர்களா?',hi:'क्या आप रोज़ 30 मिनट चलते या व्यायाम करते हैं?'}
-];
-const UI = {
- en:{yes:'YES',no:'NO',skip:"I don't know",next:'Next',score:'Severity score',why:'Main factors',tips:'Tips for you',doc:'See a',hosp:'Find nearby hospitals',again:'Start again',locating:'Finding your location…',nav:'Navigate',call:'Call',speech:'en-IN',specialty:{heart:'Cardiologist',diab:'Diabetologist',gen:'General physician'},
-  lv:{Low:'Low',Moderate:'Moderate',High:'High',Critical:'Critical'}},
- ta:{yes:'ஆம்',no:'இல்லை',skip:'தெரியாது',next:'அடுத்து',score:'தீவிர மதிப்பெண்',why:'முக்கிய காரணிகள்',tips:'உங்களுக்கான குறிப்புகள்',doc:'மருத்துவர்:',hosp:'அருகிலுள்ள மருத்துவமனைகள்',again:'மீண்டும் தொடங்கு',locating:'இடத்தை கண்டறிகிறது…',nav:'வழி',call:'அழை',speech:'ta-IN',specialty:{heart:'இதய மருத்துவர்',diab:'சர்க்கரை நோய் மருத்துவர்',gen:'பொது மருத்துவர்'},
-  lv:{Low:'குறைவு',Moderate:'மிதமான',High:'அதிகம்',Critical:'அபாயகரம்'}},
- hi:{yes:'हाँ',no:'नहीं',skip:'पता नहीं',next:'आगे',score:'गंभीरता स्कोर',why:'मुख्य कारण',tips:'आपके लिए सुझाव',doc:'डॉक्टर:',hosp:'पास के अस्पताल',again:'फिर से शुरू करें',locating:'लोकेशन खोज रहे हैं…',nav:'रास्ता',call:'कॉल',speech:'hi-IN',specialty:{heart:'हृदय रोग विशेषज्ञ',diab:'डायबिटीज विशेषज्ञ',gen:'सामान्य चिकित्सक'},
-  lv:{Low:'कम',Moderate:'मध्यम',High:'ज्यादा',Critical:'गंभीर'}}
-};
-const TIPS = {
- sweets:{en:'Cut sweets and sweet drinks; replace white rice portion with millets, vegetables and dal.',ta:'இனிப்பு, சர்க்கரை பானங்களை குறைக்கவும்; வெள்ளை அரிசியை குறைத்து தினை, காய்கறி, பருப்பு சேர்க்கவும்.',hi:'मिठाई और मीठे पेय कम करें; सफेद चावल की जगह मोटा अनाज, सब्ज़ी और दाल लें।'},
- fried:{en:'Reduce fried snacks, pickles and salt. Choose steamed food like idli, and add fruit and vegetables.',ta:'பொரித்த பலகாரம், ஊறுகாய், உப்பை குறைக்கவும். இட்லி போன்ற ஆவியில் வேகவைத்த உணவு, பழம், காய்கறி சேர்க்கவும்.',hi:'तला खाना, अचार और नमक कम करें। इडली जैसा भाप वाला खाना, फल और सब्ज़ी लें।'},
- exercise:{en:'Walk briskly 30 minutes a day, 5 days a week. Sleep 7–8 hours and drink enough water.',ta:'வாரத்தில் 5 நாள் தினமும் 30 நிமிடம் வேகமாக நடக்கவும். 7–8 மணி நேரம் தூங்கவும்.',hi:'हफ्ते में 5 दिन रोज़ 30 मिनट तेज़ चलें। 7–8 घंटे सोएं और पानी पिएं।'},
- smoke:{en:'Quit smoking, alcohol and tobacco. Ask a doctor about help to quit.',ta:'புகை, மது, புகையிலையை நிறுத்தவும். நிறுத்த மருத்துவரிடம் உதவி கேளுங்கள்.',hi:'धूम्रपान, शराब और तंबाकू छोड़ें। छोड़ने में डॉक्टर से मदद लें।'},
- glucose:{en:'Your sugar looks high: get HbA1c checked and avoid refined carbs.',ta:'சர்க்கரை அதிகம்: HbA1c பரிசோதனை செய்யவும்; சுத்திகரிக்கப்பட்ட மாவுச்சத்தை தவிர்க்கவும்.',hi:'शुगर ज्यादा है: HbA1c जांच कराएं और रिफाइंड कार्ब से बचें।'},
- sbp:{en:'Your BP looks high: reduce salt, check BP weekly, and see a doctor.',ta:'இரத்த அழுத்தம் அதிகம்: உப்பை குறைத்து வாரம் ஒருமுறை அளவிடவும்; மருத்துவரை பாருங்கள்.',hi:'बीपी ज्यादा है: नमक कम करें, हर हफ्ते जांचें और डॉक्टर से मिलें।'}
-};
-// Illustrative model weights (replace with your trained logistic regression coefficients)
-const W = {age:.6,sbp:.5,glucose:.6,spo2:.7,chest:.9,sweat:.5,breath:.8,face:.6,arm:.6,diab:.5,htn:.4,smoke:.4,sweets:.25,fried:.2,exercise:-.4};
-const BIAS = -2.0;
-const NAMES = {age:'Age',sbp:'Blood pressure',glucose:'Blood sugar',spo2:'Low oxygen',chest:'Chest pain',sweat:'Sweating/faint',breath:'Breathlessness',face:'Face/speech',arm:'Limb weakness',diab:'Diabetes',htn:'High BP history',smoke:'Smoking/alcohol',sweets:'Sweets',fried:'Fried/salty food',exercise:'Exercise'};
-
-let lang='en', idx=0, ans={}, siren=null, ctx=null;
-const $=id=>document.getElementById(id);
-const sigmoid=x=>1/(1+Math.exp(-x));
-
-function say(text){ if(!('speechSynthesis' in window))return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang=UI[lang].speech; speechSynthesis.speak(u); }
-
-function show(){
-  while(idx<Q.length&&pre.has(Q[idx].id))idx++;
-  if(idx>=Q.length){finish();return}
-  const q=Q[idx], u=UI[lang];
-  $('bar').style.width=(idx/Q.length*100)+'%';
-  $('step').textContent=(idx+1)+' / '+Q.length; $('icon').textContent=q.i; $('q').textContent=q[lang]; $('heard').textContent='';
-  const a=$('answers'); a.innerHTML='';
-  if(q.t==='yn'){
-    a.append(btn(u.yes,'yes',()=>answer(1)), btn(u.no,'no',()=>answer(0)));
-  } else {
-    const inp=document.createElement('input'); inp.type='number'; inp.id='num'; a.append(inp,
-      btn(u.next,'',()=>{const v=parseFloat(inp.value); answer(isNaN(v)?null:v)}),
-      btn(u.skip,'skip',()=>answer(null)));
-  }
-  say(q[lang]);
-}
-function btn(t,c,f){const b=document.createElement('button');b.textContent=t;b.className=c;b.onclick=f;return b}
-function answer(v){ if(v!==null) ans[Q[idx].id]=v; idx++; idx<Q.length?show():finish(); }
-
-// Voice input (Chrome/Edge). Numbers are read as digits; yes/no words in all 3 languages.
-function listen(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){$('heard').textContent='Voice input not supported. Use Chrome/Edge.';return}
-  const r=new SR(); r.lang=UI[lang].speech; $('heard').textContent='🎤 …';
-  r.onresult=e=>{
-    const s=e.results[0][0].transcript.toLowerCase(); $('heard').textContent='“'+s+'”';
-    const q=Q[idx];
-    if(q.t==='num'){ const m=s.match(/\d+(\.\d+)?/); if(m) setTimeout(()=>answer(parseFloat(m[0])),700); }
-    else {
-      const yes=/(yes|yeah|yep|ஆம்|ஆமா|हाँ|हां|haan)/.test(s), no=/(no|nope|இல்லை|இல்ல|नहीं|nahi)/.test(s);
-      if(yes||no) setTimeout(()=>answer(yes?1:0),700);
-    }
-  };
-  r.onerror=()=>$('heard').textContent='Could not hear. Try again.';
-  r.start();
-}
-
-// Rule-based red flags: these override the ML model
-function redFlags(a){
-  const f=[];
-  if(a.chest&&a.sweat) f.push('Chest pain with sweating / fainting – possible heart attack');
-  if(a.face||a.arm) f.push('Stroke signs (face droop, slurred speech, limb weakness)');
-  if(a.spo2!==undefined&&a.spo2<90) f.push('Oxygen below 90%');
-  if(a.breath) f.push('Severe breathing difficulty');
-  if(a.glucose!==undefined&&a.glucose<54) f.push('Dangerously low blood sugar');
-  if(a.sbp!==undefined&&a.sbp>=180) f.push('Very high blood pressure');
-  return f;
-}
-
-function predict(a){
-  const z={
-    age:a.age!==undefined?(a.age-50)/15:0, sbp:a.sbp!==undefined?(a.sbp-125)/18:0,
-    glucose:a.glucose!==undefined?(a.glucose-110)/40:0, spo2:a.spo2!==undefined?Math.max(0,(96-a.spo2)/3):0
-  };
-  let s=BIAS; const c=[];
-  for(const k in W){ const x=z[k]!==undefined?z[k]:(a[k]||0); const v=W[k]*x; s+=v; c.push({k,v}); }
-  const score=Math.round(sigmoid(s)*100);
-  const level=score<25?'Low':score<50?'Moderate':score<75?'High':'Critical';
-  c.sort((p,q)=>Math.abs(q.v)-Math.abs(p.v));
-  return {score,level,top:c.filter(x=>Math.abs(x.v)>0.05).slice(0,8)};
-}
-
-function finish(){
-  $('bar').style.width='100%';
-  const flags=redFlags(ans); let r=predict(ans);
-  if(flags.length){ r.level='Critical'; r.score=Math.max(r.score,90); }
-  store.set('risk',{score:r.score,level:r.level,flags,ts:Date.now()}); render(r,flags); if(flags.length) emergency(flags);
-}
-
-function render(r,flags){
-  const u=UI[lang]; $('quiz').hidden=true; const el=$('result'); el.hidden=false;
-  const max=Math.max(...r.top.map(x=>Math.abs(x.v)),.01);
-  const bars=r.top.map(x=>`<div class="contrib"><span>${NAMES[x.k]}</span><i class="${x.v>0?'inc':'dec'}" style="width:${Math.abs(x.v)/max*55}%"></i></div>`).join('');
-  const tipKeys=[]; ['sweets','fried','exercise','smoke'].forEach(k=>{ if((k==='exercise'&&ans.exercise===0)||(k!=='exercise'&&ans[k])) tipKeys.push(k)});
-  if(ans.glucose>140) tipKeys.push('glucose'); if(ans.sbp>=140) tipKeys.push('sbp');
-  const tips=tipKeys.map(k=>`<li>${TIPS[k][lang]}</li>`).join('')||'<li>✅ Keep up your healthy habits.</li>';
-  const sp=(ans.chest||ans.sbp>=140||ans.htn)?'heart':(ans.diab||ans.glucose>140)?'diab':'gen';
-  el.innerHTML=`<div class="ring ${r.level}" style="--p:${r.score}"><div><b>${r.score}</b><small>/ 100</small></div></div><div class="muted">${u.score}</div>
-   <span class="badge ${r.level}">${u.lv[r.level]}</span>
-   ${flags.length?'<div class="alert"><b>🚨 '+flags.join('; ')+'</b></div>':''}
-   <h3>${u.why}</h3>${bars}
-   <h3>${u.tips}</h3><ul class="tips">${tips}</ul>
-   <p class="doc">👨‍⚕️ ${u.doc} <b>${u.specialty[sp]}</b></p>
-   <div class="row"><button id="hbtn">🏥 ${u.hosp}</button><button class="ghost" id="again">${u.again}</button></div>`;
-  $('hbtn').onclick=()=>emergency(flags.length?flags:['Check nearby hospitals'],false);
-  $('again').onclick=()=>{idx=0;ans={};pre.clear();$('result').hidden=true;$('quiz').hidden=false;show()};
-  say(`${u.score} ${r.score}. ${u.lv[r.level]}.`);
-}
-
-// ===== Emergency overlay =====
-function emergency(flags,withSiren=true){
-  $('why').textContent=flags.join(' • '); $('emergency').hidden=false;
-  if(withSiren) startSiren(); if(navigator.vibrate) navigator.vibrate([500,200,500,200,500]);
-  $('hospitals').innerHTML=`<li>${UI[lang].locating}</li>`;
-  navigator.geolocation.getCurrentPosition(p=>loadHospitals(p.coords.latitude,p.coords.longitude),
-    ()=>$('hospitals').innerHTML='<li>Location blocked. Call 108 / 112 now.</li>',{enableHighAccuracy:true,timeout:10000});
-}
-function startSiren(){
-  stopSiren(); ctx=new (window.AudioContext||window.webkitAudioContext)();
-  const o=ctx.createOscillator(), g=ctx.createGain(); o.type='square'; g.gain.value=.15; o.connect(g); g.connect(ctx.destination); o.start();
-  let hi=false; siren=setInterval(()=>{o.frequency.value=(hi=!hi)?900:600},500); siren.o=o;
-}
-function stopSiren(){ if(siren){clearInterval(siren);siren.o&&siren.o.stop();siren=null} if(ctx){ctx.close();ctx=null} }
-const dist=(a,b,c,d)=>{const R=6371,t=x=>x*Math.PI/180,dl=t(c-a),dn=t(d-b);const h=Math.sin(dl/2)**2+Math.cos(t(a))*Math.cos(t(c))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
-async function loadHospitals(lat,lon){
-  try{
-    const q=`[out:json][timeout:20];(node[amenity=hospital](around:8000,${lat},${lon});way[amenity=hospital](around:8000,${lat},${lon}););out center 25;`;
-    const res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q)});
-    const d=await res.json();
-    const list=d.elements.map(e=>({name:(e.tags&&e.tags.name)||'Hospital',lat:e.lat||e.center.lat,lon:e.lon||e.center.lon,phone:e.tags&&(e.tags.phone||e.tags['contact:phone'])}))
-      .map(h=>({...h,km:dist(lat,lon,h.lat,h.lon)})).sort((a,b)=>a.km-b.km).slice(0,6);
-    $('hospitals').innerHTML=list.length?list.map(h=>`<li><b>${h.name}</b> – ${h.km.toFixed(1)} km<br>
-      <a href="https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lon}" target="_blank">🧭 ${UI[lang].nav}</a>
-      ${h.phone?`<a href="tel:${h.phone.replace(/[^+\d]/g,'')}">📞 ${UI[lang].call}</a>`:''}</li>`).join(''):'<li>No hospitals found nearby. Call 108 / 112.</li>';
-  }catch(e){ $('hospitals').innerHTML='<li>Could not load hospitals (check internet). Call 108 / 112.</li>'; }
-}
-
-$('lang').onchange=e=>{lang=e.target.value;document.documentElement.lang=lang;if(!$('quiz').hidden&&!$('v-check').hidden)show(); if(typeof renderHome==='function')renderHome()};
-$('speak').onclick=()=>say(Q[idx][lang]);
-$('mic').onclick=listen;
-$('stop').onclick=stopSiren;
-$('close').onclick=()=>{stopSiren();$('emergency').hidden=true};
-// show() runs when the Risk Check tab opens (see extras.js)
-
-</script>
-<script>
-// ===== extras.js : navigation, dashboard, report scan (OCR), medicines, lifestyle =====
-let started=false;
-const TITLES={home:'Dashboard',check:'Risk Check',scan:'Scan Reports',meds:'Medicines',life:'Lifestyle & Habits'};
-function nav(v){
-  document.querySelectorAll('.view').forEach(e=>e.hidden=e.id!=='v-'+v);
-  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
-  $('title').textContent=TITLES[v];
-  if(v==='home')renderHome();
-  if(v==='check'&&!started){started=true;show()}
-  window.scrollTo(0,0);
-}
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>nav(b.dataset.v));
-$('sos').onclick=()=>emergency(['SOS pressed – get help now']);
-
-// ---------- OCR ----------
-async function ocr(file,el){
-  if(!window.Tesseract){el.textContent='OCR library not loaded – check your internet connection.';return ''}
-  el.textContent='Starting…';
-  const r=await Tesseract.recognize(file,'eng',{logger:m=>{if(m.status==='recognizing text')el.textContent='Reading… '+Math.round(m.progress*100)+'%'}});
-  el.textContent='Done. Please check the results.'; return r.data.text;
-}
-function pick(fileId,imgId,btnId){
-  const f=$(fileId); f.onchange=e=>{const file=e.target.files[0]; if(!file)return; f._file=file; $(imgId).src=URL.createObjectURL(file); $(imgId).hidden=false; $(btnId).disabled=false};
-}
-
-// ---------- Report scan ----------
-const LABS=[
- {k:'sbp',n:'Systolic BP',u:'mmHg',lo:90,hi:130,re:/(?:bp|blood pressure)[^\d]{0,15}(\d{2,3})\s*\/\s*\d{2,3}/i},
- {k:'glucose',n:'Blood sugar',u:'mg/dL',lo:70,hi:140,re:/(?:glucose|sugar|fbs|rbs|ppbs|fasting)[^\d]{0,25}(\d{2,3}(?:\.\d+)?)/i},
- {k:'hba1c',n:'HbA1c',u:'%',lo:4,hi:5.7,re:/hba1c[^\d]{0,15}(\d{1,2}(?:\.\d+)?)/i},
- {k:'hb',n:'Hemoglobin',u:'g/dL',lo:12,hi:17,re:/(?:hemoglobin|haemoglobin|\bhb)\b[^\d]{0,15}(\d{1,2}(?:\.\d+)?)/i},
- {k:'chol',n:'Total cholesterol',u:'mg/dL',lo:0,hi:200,re:/cholesterol[^\d]{0,25}(\d{2,3})/i},
- {k:'creat',n:'Creatinine',u:'mg/dL',lo:0.6,hi:1.3,re:/creatinine[^\d]{0,15}(\d(?:\.\d+)?)/i},
- {k:'spo2',n:'SpO2',u:'%',lo:94,hi:100,re:/(?:spo2|oxygen saturation)[^\d]{0,15}(\d{2,3})/i}
-];
-function status(l,v){ if(v===undefined||isNaN(v))return['—','']; return v>l.hi?['High','bad']:v<l.lo?['Low','warn']:['Normal','ok'] }
-pick('repFile','repImg','repGo');
-$('repGo').onclick=async()=>{ $('repGo').disabled=true; const t=await ocr($('repFile')._file,$('repStat')); $('repGo').disabled=false; showLabs(t) };
-function showLabs(t){
-  const rows=LABS.map(l=>{const m=t.match(l.re);return `<tr><td>${l.n}</td><td><input data-k="${l.k}" type="number" step="any" value="${m?m[1]:''}"> ${l.u}</td><td>${l.lo}–${l.hi}</td><td><span class="chip" id="st-${l.k}"></span></td></tr>`}).join('');
-  $('repOut').innerHTML=`<h3>Confirm the values we read</h3><p class="muted">Scanners can misread digits (e.g. 1.0 vs 10). Correct anything wrong or fill missing values.</p>
-   <div class="tbl"><table><tr><th>Test</th><th>Your value</th><th>Normal</th><th>Status</th></tr>${rows}</table></div>
-   <div class="row"><button id="repUse">✔ Values are correct – use for Risk Check</button></div>
-   <details><summary class="muted">Show raw scanned text</summary><pre>${t.replace(/</g,'&lt;')}</pre></details>`;
-  const upd=()=>LABS.forEach(l=>{const s=status(l,parseFloat(document.querySelector(`#repOut [data-k=${l.k}]`).value)),c=$('st-'+l.k);c.textContent=s[0];c.className='chip '+s[1]});
-  document.querySelectorAll('#repOut input').forEach(i=>i.oninput=upd); upd();
-  $('repUse').onclick=useLabs;
-}
-function useLabs(){
-  const vals={}; document.querySelectorAll('#repOut input').forEach(i=>{const v=parseFloat(i.value);if(!isNaN(v))vals[i.dataset.k]=v});
-  store.set('labs',vals);
-  ['sbp','glucose','spo2'].forEach(k=>{if(vals[k]!==undefined){ans[k]=vals[k];pre.add(k)}});
-  started=true; nav('check'); idx=0; $('result').hidden=true; $('quiz').hidden=false; show();
-}
-
-// ---------- Medicines ----------
-const DRUGS=[
- {g:'Metformin',use:'Lowers blood sugar (diabetes)',c:'dm',re:/metformin|glycomet|glucophage/i},
- {g:'Glimepiride',use:'Lowers blood sugar (diabetes)',c:'dm',re:/glimepiride|amaryl|glimy/i},
- {g:'Insulin',use:'Controls blood sugar (diabetes)',c:'dm',re:/insulin|mixtard|lantus/i},
- {g:'Amlodipine',use:'Lowers blood pressure',c:'bp',re:/amlodipine|amlokind|norvasc/i},
- {g:'Telmisartan',use:'Lowers blood pressure',c:'bp',re:/telmisartan|telma/i},
- {g:'Losartan',use:'Lowers blood pressure',c:'bp',re:/losartan|losar/i},
- {g:'Atenolol',use:'Lowers BP and heart rate',c:'bp',re:/atenolol/i},
- {g:'Metoprolol',use:'Lowers BP and heart rate',c:'bp',re:/metoprolol|metolar/i},
- {g:'Atorvastatin',use:'Lowers cholesterol',c:'',re:/atorvastatin|atorva|lipitor/i},
- {g:'Aspirin',use:'Blood thinner / heart protection',c:'',re:/aspirin|ecosprin|disprin/i},
- {g:'Clopidogrel',use:'Blood thinner',c:'',re:/clopidogrel|clopilet/i},
- {g:'Warfarin',use:'Blood thinner',c:'',re:/warfarin/i},
- {g:'Ibuprofen',use:'Painkiller (NSAID)',c:'',re:/ibuprofen|brufen/i},
- {g:'Diclofenac',use:'Painkiller (NSAID)',c:'',re:/diclofenac|voveran/i},
- {g:'Paracetamol',use:'Fever and pain',c:'',re:/paracetamol|dolo|crocin|calpol/i},
- {g:'Pantoprazole',use:'Acidity / stomach protection',c:'',re:/pantoprazole|pantop/i},
- {g:'Levothyroxine',use:'Thyroid hormone',c:'',re:/levothyroxine|thyronorm|eltroxin/i}
-];
-const INTER=[
- [['Warfarin'],['Aspirin','Ibuprofen','Diclofenac','Clopidogrel'],'High risk of serious bleeding','bad'],
- [['Aspirin'],['Ibuprofen','Diclofenac','Clopidogrel'],'Raised bleeding and stomach risk; painkiller may weaken aspirin','warn'],
- [['Losartan','Telmisartan'],['Ibuprofen','Diclofenac'],'Painkillers can harm kidneys and weaken BP control','warn'],
- [['Atenolol'],['Metoprolol'],'Two beta-blockers together can slow the heart too much','bad']
-];
-function interactions(list){const o=[];INTER.forEach(([a,b,m,l])=>a.filter(i=>list.includes(i)).forEach(p=>b.filter(i=>list.includes(i)).forEach(q=>{if(p!==q)o.push({a:p,b:q,m,l})})));return o}
-let meds=store.get('meds')||[];
-function addFromText(t){let n=0;DRUGS.forEach(d=>{if(d.re.test(t)&&!meds.includes(d.g)){meds.push(d.g);n++}});return n}
-function renderMeds(){
-  store.set('meds',meds);
-  $('medList').innerHTML=meds.length?meds.map((m,i)=>{const d=DRUGS.find(x=>x.g===m);return `<div class="med"><div><b>${m}</b><small>${d?d.use:'Not in our list – ask your pharmacist'}</small></div><button class="x" onclick="meds.splice(${i},1);renderMeds()">✕</button></div>`}).join(''):'<p class="muted">No medicines added yet.</p>';
-  $('medWarn').innerHTML=interactions(meds).map(i=>`<div class="alert ${i.l==='bad'?'':'warn'}"><b>⚠ ${i.a} + ${i.b}</b><br>${i.m}. Ask your doctor or pharmacist before continuing.</div>`).join('');
-  const cls=c=>meds.some(m=>(DRUGS.find(d=>d.g===m)||{}).c===c);
-  if(cls('dm')){ans.diab=1;pre.add('diab')} if(cls('bp')){ans.htn=1;pre.add('htn')}
-}
-pick('medFile','medImg','medGo');
-$('medGo').onclick=async()=>{ $('medGo').disabled=true; const t=await ocr($('medFile')._file,$('medStat')); $('medGo').disabled=false;
-  const n=addFromText(t); $('medStat').textContent=n?`Found ${n} medicine(s). Please check the list below.`:'No known medicine names found. Try a clearer photo or type the name.'; renderMeds() };
-$('medAdd').onclick=()=>{const v=$('medIn').value.trim(); if(!v)return; if(!addFromText(v)&&!meds.includes(v))meds.push(v); $('medIn').value=''; renderMeds()};
-
-// ---------- Lifestyle ----------
-const HAB=[
- {id:'sleep',i:'😴',n:'Sleep',o:['7–8 hours','5–6 hours','Under 5 hours'],why:'Poor sleep raises blood pressure, sugar and heart risk.',fix:'Fix a bedtime, keep the phone away 30 minutes before sleep, aim for 7–8 hours.'},
- {id:'water',i:'💧',n:'Water',o:['8+ glasses','4–7 glasses','Under 4'],why:'Low water intake strains the kidneys and raises urine-infection risk.',fix:'Keep a bottle with you; drink a glass on waking and before each meal.'},
- {id:'move',i:'🚶',n:'Exercise',o:['30+ min daily','10–30 min','Almost none'],why:'Inactivity is a major cause of heart disease, diabetes and obesity.',fix:'Walk briskly 30 minutes, 5 days a week; use stairs; stand and stretch every hour.'},
- {id:'sweet',i:'🍬',n:'Sweets & sugary drinks',o:['Rarely','Few times a week','Daily'],why:'Added sugar drives diabetes, fatty liver and weight gain.',fix:'Take tea/coffee without sugar; replace cold drinks with buttermilk or lemon water.'},
- {id:'fried',i:'🍟',n:'Fried / oily food',o:['Rarely','Weekly','Daily'],why:'Raises bad (LDL) cholesterol and clogs arteries.',fix:'Choose steamed or grilled food (idli, idiyappam); limit vada, bajji, samosa to once a week.'},
- {id:'salt',i:'🧂',n:'Salt, pickles, papad',o:['Low','Normal','High'],why:'Too much salt raises blood pressure and stroke risk.',fix:'Keep salt under 1 teaspoon a day; skip table salt, pickles and papad.'},
- {id:'rice',i:'🍚',n:'White rice / maida portion',o:['Small','Medium','Large'],why:'Large refined-carb portions spike blood sugar.',fix:'Half the plate vegetables, a quarter protein (dal, egg, fish), a quarter rice or millets.'},
- {id:'veg',i:'🥦',n:'Vegetables & fruit',o:['5+ servings','2–4','0–1'],why:'Low fibre and vitamins raise heart-disease risk.',fix:'Add greens, a salad with lunch and one fruit every day.'},
- {id:'out',i:'🛵',n:'Outside / junk food',o:['Rarely','Weekly','Daily'],why:'Hidden salt, sugar and unhealthy fats.',fix:'Cook at home; carry fruit or roasted chana as a snack.'},
- {id:'tob',i:'🚬',n:'Smoking / tobacco / pan',o:['None','Occasionally','Daily'],why:'A leading cause of heart attack, stroke and cancer.',fix:'Set a quit date and ask your doctor about quit-smoking support.'},
- {id:'alc',i:'🍺',n:'Alcohol',o:['None','Occasionally','Often'],why:'Damages the liver, raises blood pressure and accident risk.',fix:'Cut down gradually, keep alcohol-free days, seek help if you cannot stop.'},
- {id:'stress',i:'🧠',n:'Stress',o:['Low','Moderate','High'],why:'Long-term stress raises blood pressure and heart risk.',fix:'Practise 10 minutes of breathing or yoga daily; talk to family or a counsellor.'}
-];
-const SWAPS=[['White rice every meal','Millets (ragi, kambu), brown rice or a smaller portion'],['Maida parotta, bakery items','Whole-wheat chapati, millet dosa'],['Vada, bajji, samosa','Sundal, roasted chana, fruit, nuts'],['Sweet tea/coffee, cold drinks','Unsweetened tea, buttermilk, lemon water'],['Pickle, papad, extra salt','Fresh salad, lemon, herbs and spices'],['Biryani / fried rice often','Vegetable pulao with dal, sambar and curd']];
-const sel=store.get('lifesel')||{};
-function renderLife(){
-  $('lifeForm').innerHTML=HAB.map(h=>`<div class="hab"><div class="hn">${h.i} ${h.n}</div><div class="seg">${h.o.map((t,j)=>`<button class="pill p${j}${sel[h.id]===j?' on':''}" onclick="sel['${h.id}']=${j};renderLife()">${t}</button>`).join('')}</div></div>`).join('');
-}
-$('lifeGo').onclick=()=>{
-  const n=HAB.filter(h=>sel[h.id]!==undefined).length;
-  if(n<HAB.length){$('lifeOut').innerHTML=`<div class="alert warn">Please answer all ${HAB.length} habits (${n} done).</div>`;return}
-  const pts=HAB.reduce((s,h)=>s+sel[h.id],0), score=Math.round(100-pts/(HAB.length*2)*100);
-  const lv=score>=75?['Low','Healthy lifestyle']:score>=50?['Moderate','Needs improvement']:score>=30?['High','Unhealthy lifestyle']:['Critical','Very unhealthy lifestyle'];
-  const bad=HAB.filter(h=>sel[h.id]===2), mid=HAB.filter(h=>sel[h.id]===1), good=HAB.filter(h=>sel[h.id]===0);
-  store.set('life',{score,bad:bad.map(h=>h.n),ts:Date.now()}); store.set('lifesel',sel);
-  const card=(h,c)=>`<div class="alert ${c}"><b>${h.i} ${h.n}</b><br><b>Why it matters:</b> ${h.why}<br><b>Change:</b> ${h.fix}</div>`;
-  $('lifeOut').innerHTML=`<section class="card" style="text-align:center"><div class="ring ${lv[0]}" style="--p:${score}"><div><b>${score}</b><small>/ 100</small></div></div><span class="badge ${lv[0]}">${lv[1]}</span></section>
-   ${bad.length?`<section class="card"><h2>🔴 High-risk habits (${bad.length})</h2>${bad.map(h=>card(h,'')).join('')}</section>`:''}
-   ${mid.length?`<section class="card"><h2>🟠 Habits to improve (${mid.length})</h2>${mid.map(h=>card(h,'warn')).join('')}</section>`:''}
-   ${good.length?`<section class="card"><h2>✅ Keep doing</h2><p>${good.map(h=>h.i+' '+h.n).join(' &nbsp;·&nbsp; ')}</p></section>`:''}
-   <section class="card"><h2>🎯 This week's goals</h2>${bad.concat(mid).slice(0,3).map(h=>`<label class="goal"><input type="checkbox"><span>${h.fix}</span></label>`).join('')||'<p class="muted">Great – keep your routine.</p>'}</section>
-   <section class="card"><h2>🍽️ Smart food swaps</h2><div class="tbl"><table><tr><th>Instead of</th><th>Try</th></tr>${SWAPS.map(s=>`<tr><td>${s[0]}</td><td>${s[1]}</td></tr>`).join('')}</table></div></section>`;
-  $('lifeOut').scrollIntoView({behavior:'smooth'});
-};
-
-// ---------- Dashboard ----------
-function renderHome(){
-  const r=store.get('risk'),labs=store.get('labs')||{},life=store.get('life'),al=[];
-  if(r&&r.flags)r.flags.forEach(f=>al.push(['','🚨 Emergency sign',f]));
-  LABS.forEach(l=>{const v=labs[l.k]; if(v!==undefined){const s=status(l,v); if(s[1]&&s[1]!=='ok')al.push([s[1]==='bad'?'':'warn',`🧪 ${l.n} is ${s[0]}`,`${v} ${l.u} (normal ${l.lo}–${l.hi}). Discuss with a doctor.`])}});
-  interactions(meds).forEach(i=>al.push([i.l==='bad'?'':'warn',`💊 ${i.a} + ${i.b}`,i.m]));
-  if(life)life.bad.forEach(n=>al.push(['warn','🥗 Risky habit: '+n,'Open the Lifestyle tab to see how to change it.']));
-  const hero=r?`<div class="ring ${r.level}" style="--p:${r.score}"><div><b>${r.score}</b><small>/ 100</small></div></div><span class="badge ${r.level}">${r.level} risk</span><p class="muted">Last check: ${new Date(r.ts).toLocaleDateString()}</p><div class="row"><button onclick="started=true;nav('check');idx=0;ans={};pre.clear();$('result').hidden=true;$('quiz').hidden=false;show()">Re-check now</button></div>`
-    :`<div class="icon">🩺</div><h2>No risk check yet</h2><p class="muted">Takes about 2 minutes. You can answer by voice.</p><div class="row"><button onclick="nav('check')">Start Risk Check</button></div>`;
-  $('v-home').innerHTML=`<div class="grid"><section class="card hero">${hero}</section>
-   <section class="card"><h2>Quick actions</h2><div class="qa"><div onclick="nav('check')"><span>🧪</span>Risk Check</div><div onclick="nav('scan')"><span>📄</span>Scan Report</div><div onclick="nav('meds')"><span>💊</span>Medicines</div><div onclick="nav('life')"><span>🥗</span>Lifestyle</div></div></section></div>
-   <section class="card"><h2>⚠️ Health warnings</h2>${al.length?al.map(a=>`<div class="alert ${a[0]}"><b>${a[1]}</b><br>${a[2]}</div>`).join(''):'<div class="alert ok">✅ No warnings yet. Complete a Risk Check, scan a report or add medicines to get personalised alerts.</div>'}</section>`;
-}
-renderMeds(); renderLife(); nav('home');
-
-</script>
-</body>
-</html>
+const $=s=>document.querySelector(s);
+const h=(t,a={},...k)=>{const e=document.createElement(t);for(const[x,y]of Object.entries(a)){if(x==='class')e.className=y;else if(x.startsWith('on'))e[x]=y;else e.setAttribute(x,y)}e.append(...k);return e};
+const S={get(k,d){try{const v=JSON.parse(localStorage.getItem('hr_'+k));return v==null?d:v}catch{return d}},set(k,v){try{localStorage.setItem('hr_'+k,JSON.stringify(v))}catch{}}};
+// ---- strict age validation (same rules as tested backend/frontend modules) ----
+const RE=/^(0|[1-9][0-9]{0,2})$/;
+function validateAge(r){if(r==null||typeof r==='boolean')return{ok:0,e:'Age is required.'};let t;
+ if(typeof r==='number'){if(!Number.isInteger(r))return{ok:0,e:'Age must be a whole number from 0 to 100.'};if(r<0||r>100)return{ok:0,e:'Age must be between 0 and 100.'};t=String(r)}
+ else if(typeof r==='string'){t=r.trim();if(!t)return{ok:0,e:'Age is required.'};if(!RE.test(t))return{ok:0,e:'Age must be a whole number from 0 to 100 (digits only).'}}
+ else return{ok:0,e:'Age must be a whole number from 0 to 100.'};
+ const v=Number(t);return v>100?{ok:0,e:'Age must be between 0 and 100.'}:{ok:1,v}}
+const GR=[[2,'👶','Infant (0–2)'],[12,'🧒','Child (3–12)'],[17,'🧑‍🎓','Teen (13–17)'],[35,'🧑','Young adult (18–35)'],[59,'🧑‍💼','Adult (36–59)'],[79,'🧓','Older adult (60–79)'],[100,'👵','Senior (80–100)']];
+const grp=a=>GR.find(g=>a<=g[0]);
+let lang='en',view='home',profile=S.get('profile',null),meds=S.get('meds',[]),labs=S.get('labs',null),risk=S.get('risk',null),life=S.get('life',{});
+const V={home:['🏠','Dashboard'],check:['🧪','Risk Check'],scan:['📄','Scan Reports'],meds:['💊','Medicines'],vitals:['❤️','Vitals'],symp:['🩺','Symptoms'],life:['🥗','Lifestyle'],learn:['📚','Health Tips'],acct:['🔐','Account'],priv:['🔒','Privacy']};
+function buildNav(){const n=$('nav');n.replaceChildren(...Object.entries(V).map(([k,[i,t]])=>h('button',{type:'button',onclick:()=>go(k),...(k===view?{'aria-current':'page'}:{})},i+' '+t)))}
+function go(v){view=v;$('#ttl').textContent=V[v][1];buildNav();R[v]();$('#ttl').focus();scrollTo(0,0)}
+const say=t=>{if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang={en:'en-IN',ta:'ta-IN',hi:'hi-IN'}[lang];speechSynthesis.speak(u)};
+const al=(c,...k)=>h('div',{class:'al '+c,role:c===''?'alert':'note'},...k);
+// ---- reference/educational data (limited, not exhaustive) ----
+const DRUGS=[['Metformin','Lowers blood sugar (diabetes)',/metformin|glycomet|glucophage/i],['Glimepiride','Lowers blood sugar (diabetes)',/glimepiride|amaryl/i],['Amlodipine','Lowers blood pressure',/amlodipine|amlokind|norvasc/i],['Telmisartan','Lowers blood pressure',/telmisartan|telma/i],['Losartan','Lowers blood pressure',/losartan/i],['Atenolol','Lowers BP and heart rate',/atenolol/i],['Metoprolol','Lowers BP and heart rate',/metoprolol/i],['Atorvastatin','Lowers cholesterol',/atorvastatin|lipitor/i],['Aspirin','Blood thinner / heart protection',/aspirin|ecosprin|disprin/i],['Clopidogrel','Blood thinner',/clopidogrel/i],['Warfarin','Blood thinner',/warfarin/i],['Ibuprofen','Painkiller (NSAID)',/ibuprofen|brufen/i],['Diclofenac','Painkiller (NSAID)',/diclofenac|voveran/i],['Paracetamol','Fever and pain',/paracetamol|\bdolo\b|crocin|calpol/i],['Pantoprazole','Acidity / stomach protection',/pantoprazole|pantop/i],['Levothyroxine','Thyroid hormone',/levothyroxine|thyronorm|eltroxin/i]];
+const INTER=[[['Warfarin'],['Aspirin','Ibuprofen','Diclofenac','Clopidogrel'],'Higher risk of serious bleeding',''],[['Aspirin'],['Ibuprofen','Diclofenac','Clopidogrel'],'Raised bleeding and stomach risk','w'],[['Losartan','Telmisartan'],['Ibuprofen','Diclofenac'],'Can strain kidneys and weaken BP control','w'],[['Atenolol'],['Metoprolol'],'Two beta-blockers together can slow the heart too much','']];
+const inter=l=>{const o=[];INTER.forEach(([a,b,m,c])=>a.filter(x=>l.includes(x)).forEach(p=>b.filter(x=>l.includes(x)).forEach(q=>p!==q&&o.push([p,q,m,c]))));return o};
+const medNote=()=>al('w','ℹ️ Medicine info here is a short built-in list for education, not official labelling. Check ',h('a',{href:'https://medlineplus.gov/druginformation.html',target:'_blank',rel:'noopener'},'MedlinePlus drug information'),' or ask a pharmacist. Never start, stop or change a medicine without a clinician.');
+const interBox=()=>{const x=inter(meds);const d=h('div');x.forEach(i=>d.append(al(i[3],h('b',{},'⚠ '+i[0]+' + '+i[1]),h('br'),i[2]+'. Ask your doctor or pharmacist.')));
+ if(meds.length>1&&!x.length)d.append(al('w','No interaction found in our small list of 4 rules. This is NOT an all-clear — many interactions are not covered. Ask a pharmacist.'));return d};
+// ---- Risk check ----
+const Q=[['sbp','n',50,300,'🩸','Top number of your blood pressure? (skip if unknown)','இரத்த அழுத்தத்தின் மேல் எண்? (தெரியாவிட்டால் தவிர்க்கவும்)','ब्लड प्रेशर का ऊपर वाला नंबर? (पता न हो तो छोड़ें)'],['glucose','n',20,600,'🍬','Blood sugar value in mg/dL? (skip if unknown)','இரத்த சர்க்கரை அளவு (mg/dL)? (தெரியாவிட்டால் தவிர்க்கவும்)','ब्लड शुगर (mg/dL)? (पता न हो तो छोड़ें)'],['spo2','n',50,100,'🫁','Oxygen level (SpO2 %) if you have a meter?','ஆக்சிஜன் அளவு (SpO2 %)?','ऑक्सीजन लेवल (SpO2 %)?'],
+['chest','y',0,0,'💔','Do you have chest pain now?','இப்போது நெஞ்சு வலி உள்ளதா?','क्या अभी सीने में दर्द है?'],['sweat','y',0,0,'😓','Are you sweating a lot or feeling faint?','அதிகமாக வியர்க்கிறதா அல்லது மயக்கமா?','क्या बहुत पसीना या चक्कर आ रहा है?'],['breath','y',0,0,'😮‍💨','Do you have severe difficulty breathing?','மூச்சு விட மிகவும் சிரமமா?','क्या सांस लेने में बहुत तकलीफ है?'],['face','y',0,0,'🙂','Is one side of your face drooping, or is your speech slurred?','முகம் ஒரு பக்கம் கோணுகிறதா அல்லது பேச்சு குழறுகிறதா?','क्या चेहरा एक तरफ झुका है या बोलने में दिक्कत है?'],['arm','y',0,0,'💪','Is one arm or leg suddenly weak?','ஒரு கை அல்லது கால் திடீரென பலவீனமா?','क्या एक हाथ या पैर अचानक कमजोर है?'],
+['diab','y',0,0,'🩺','Has a doctor told you that you have diabetes?','மருத்துவர் உங்களுக்கு சர்க்கரை நோய் என்று கூறியுள்ளாரா?','क्या डॉक्टर ने कहा है कि आपको डायबिटीज है?'],['htn','y',0,0,'❤️','Has a doctor told you that you have high blood pressure?','மருத்துவர் உங்களுக்கு உயர் இரத்த அழுத்தம் என்று கூறியுள்ளாரா?','क्या डॉक्टर ने कहा है कि आपको हाई बीपी है?'],['smoke','y',0,0,'🚬','Do you smoke, drink alcohol or chew tobacco?','புகை, மது அல்லது புகையிலை பழக்கம் உள்ளதா?','क्या आप धूम्रपान, शराब या तंबाकू लेते हैं?'],['sweets','y',0,0,'🍰','Do you eat sweets or drink sugary drinks daily?','தினமும் இனிப்பு அல்லது சர்க்கரை பானங்கள் எடுக்கிறீர்களா?','क्या आप रोज़ मिठाई या मीठे पेय लेते हैं?'],['fried','y',0,0,'🍟','Do you eat fried food, pickles or extra salt often?','எண்ணெய் பலகாரம், ஊறுகாய், அதிக உப்பு அடிக்கடி?','क्या आप तला खाना, अचार या ज्यादा नमक अक्सर लेते हैं?'],['exercise','y',0,0,'🚶','Do you walk or exercise at least 30 minutes a day?','தினமும் 30 நிமிடம் நடை அல்லது உடற்பயிற்சி செய்கிறீர்களா?','क्या आप रोज़ 30 मिनट चलते या व्यायाम करते हैं?']];
+const L={en:['YES','NO','Next',"I don't know"],ta:['ஆம்','இல்லை','அடுத்து','தெரியாது'],hi:['हाँ','नहीं','आगे','पता नहीं']};
+const LI={en:0,ta:1,hi:2};let qi=0,ans={};
+function flagsOf(a){const f=[];if(a.chest&&a.sweat)f.push('Chest pain with sweating or fainting – possible heart attack');if(a.face||a.arm)f.push('Stroke signs (face droop, slurred speech, limb weakness)');if(a.spo2!==undefined&&a.spo2<90)f.push('Oxygen below 90%');if(a.breath)f.push('Severe breathing difficulty');if(a.glucose!==undefined&&a.glucose<54)f.push('Very low blood sugar');if(a.sbp!==undefined&&a.sbp>=180)f.push('Very high blood pressure');return f}
+R={};
+R.check=()=>{const v=$('#view');
+ if(!profile){v.replaceChildren(h('div',{class:'card'},h('h2',{},'Set your profile first'),h('p',{class:'mut'},'The risk check uses your validated age. Please save your profile on the Dashboard.'),h('button',{class:'b',type:'button',onclick:()=>go('home')},'Go to Dashboard')));return}
+ if(profile.age<18){v.replaceChildren(h('div',{class:'card'},h('h2',{},'For children and teens'),al('w','This check is designed for adults. For anyone under 18, please talk to a parent/guardian and a paediatric clinician. In an emergency call 108 or 112.'),h('button',{class:'b',type:'button',onclick:()=>go('home')},'Back')));return}
+ if(qi>=Q.length){return finish()}
+ const q=Q[qi],err=h('div',{id:'qe',role:'alert'}),a=h('div',{class:'row',style:'justify-content:center'});
+ const next=x=>{ans[q[0]]=x;qi++;R.check()},skip=()=>{qi++;R.check()};
+ if(q[1]==='y'){a.append(h('button',{class:'b yes',type:'button',onclick:()=>next(1)},L[lang][0]),h('button',{class:'b no',type:'button',onclick:()=>next(0)},L[lang][1]))}
+ else{const i=h('input',{type:'number',min:q[2],max:q[3],step:'any',inputmode:'decimal','aria-label':q[5],style:'width:120px;font-size:1.3rem'});
+  a.append(i,h('button',{class:'b',type:'button',onclick:()=>{const n=Number(i.value);if(i.value.trim()===''||!Number.isFinite(n)||n<q[2]||n>q[3]){i.setAttribute('aria-invalid','true');err.replaceChildren(al('','Enter a number between '+q[2]+' and '+q[3]+', or skip.'));return}next(n)}},L[lang][2]),h('button',{class:'b g',type:'button',onclick:skip},L[lang][3]))}
+ v.replaceChildren(h('div',{class:'card',style:'text-align:center'},h('div',{class:'bar'},h('i',{style:'width:'+(qi/Q.length*100)+'%'})),h('p',{class:'mut'},(qi+1)+' / '+Q.length),h('div',{class:'av','aria-hidden':'true',style:'margin:8px auto'},q[4]),h('h2',{style:'font-size:1.3rem'},q[5+LI[lang]]),a,err,h('div',{class:'row',style:'justify-content:center'},h('button',{class:'b g',type:'button',onclick:()=>say(q[5+LI[lang]])},'🔊 Read aloud'),h('button',{class:'b g',type:'button',onclick:()=>mic(q,next)},'🎤 Voice'))));say(q[5+LI[lang]])};
+function mic(q,next){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert('Voice input needs Chrome or Edge.');return}const r=new SR();r.lang={en:'en-IN',ta:'ta-IN',hi:'hi-IN'}[lang];r.onresult=e=>{const s=e.results[0][0].transcript.toLowerCase();if(q[1]==='n'){const m=s.match(/\d+(\.\d+)?/);if(m){const n=Number(m[0]);if(n>=q[2]&&n<=q[3])next(n)}}else{const y=/(yes|yeah|ஆம்|ஆமா|हाँ|हां|haan)/.test(s),n=/(\bno\b|nope|இல்லை|नहीं|nahi)/.test(s);if(y||n)next(y?1:0)}};r.start()}
+function finish(){const f=flagsOf(ans),fac=[];if(ans.diab)fac.push('Diagnosed diabetes (self-reported)');if(ans.htn)fac.push('Diagnosed high BP (self-reported)');if(ans.smoke)fac.push('Smoking / alcohol / tobacco');if(ans.sweets)fac.push('Daily sweets or sugary drinks');if(ans.fried)fac.push('Frequent fried or salty food');if(ans.exercise===0)fac.push('Less than 30 min daily activity');
+ risk={ts:Date.now(),flags:f,factors:fac};S.set('risk',risk);const v=$('#view');
+ const c=h('div',{class:'card'},h('h2',{},'Your risk-awareness summary'));
+ if(f.length)c.append(al('',h('b',{},'🚨 Possible emergency signs: '+f.join('; ')),h('br'),'Call 108 or 112 now. Do not wait for more questions.'));
+ else c.append(al('w','No emergency sign was reported in your answers. This does not mean you are healthy; symptoms can change.'));
+ c.append(h('h3',{},'Reported risk factors ('+fac.length+')'),h('div',{},...(fac.length?fac.map(x=>h('span',{class:'chip'},x)):[h('span',{class:'mut'},'None reported')])));
+ const e={sbp:'Blood pressure (top)',glucose:'Blood sugar',spo2:'SpO2'};const vals=Object.keys(e).filter(k=>ans[k]!==undefined).map(k=>e[k]+': '+ans[k]);if(vals.length)c.append(h('h3',{},'Values you entered'),h('p',{},vals.join(' · ')),h('p',{class:'mut'},'We do not label these as normal or abnormal without your lab/clinician reference range.'));
+ const tip=[];if(ans.sweets)tip.push('Cut down sweets and sweet drinks; try millets, vegetables and dal in place of some white rice.');if(ans.fried)tip.push('Reduce fried snacks, pickles and extra salt; choose steamed food like idli.');if(ans.exercise===0)tip.push('Aim for a brisk 30-minute walk on most days, if your doctor says it is safe for you.');if(ans.smoke)tip.push('Ask a doctor about help to quit tobacco, smoking or alcohol.');
+ if(tip.length)c.append(h('h3',{},'General tips'),h('ul',{},...tip.map(t=>h('li',{},t))));
+ c.append(h('p',{class:'mut'},'Questions for a doctor: What do my readings mean for me? Which tests should I get and how often? Which habits should I change first?'),h('div',{class:'row'},h('button',{class:'b',type:'button',onclick:()=>emerg(f.length?f:['Find nearby care'])},'🏥 Nearby hospitals'),h('button',{class:'b g',type:'button',onclick:()=>{qi=0;ans={};R.check()}},'Start again')));
+ v.replaceChildren(c);if(f.length)emerg(f)}
+// ---- Scan reports ----
+async function ocr(file,el){if(!window.Tesseract){el.textContent='OCR library did not load – check your internet connection.';return''}el.textContent='Starting…';const r=await Tesseract.recognize(file,'eng',{logger:m=>{if(m.status==='recognizing text')el.textContent='Reading… '+Math.round(m.progress*100)+'%'}});el.textContent='Done. Please verify everything below.';return r.data.text}
+const LABS=[['glucose','Blood glucose','mg/dL',/(?:glucose|sugar|fbs|rbs|ppbs)[^\d\n]{0,25}(\d{2,3}(?:\.\d+)?)/i],['hba1c','HbA1c','%',/hba1c[^\d\n]{0,15}(\d{1,2}(?:\.\d+)?)/i],['hb','Hemoglobin','g/dL',/(?:hemoglobin|haemoglobin)[^\d\n]{0,15}(\d{1,2}(?:\.\d+)?)/i],['chol','Total cholesterol','mg/dL',/total\s+cholesterol[^\d\n]{0,25}(\d{2,3})|(?<!hdl |ldl )cholesterol[^\d\n]{0,25}(\d{2,3})/i],['creat','Creatinine','mg/dL',/creatinine[^\d\n]{0,15}(\d(?:\.\d+)?)/i]];
+R.scan=()=>{const f=h('input',{type:'file',accept:'image/jpeg,image/png','aria-label':'Report image'}),img=h('img',{alt:'Report preview',style:'max-width:100%;max-height:240px;border-radius:10px',hidden:''}),st=h('p',{class:'mut',role:'status'}),out=h('div'),go1=h('button',{class:'b',type:'button',disabled:''},'🔍 Read report');
+ f.onchange=()=>{const x=f.files[0];if(!x)return;if(!/^image\/(jpeg|png)$/.test(x.type)||x.size>10e6){st.textContent='Please choose a JPG or PNG under 10 MB.';go1.disabled=true;return}img.src=URL.createObjectURL(x);img.hidden=false;go1.disabled=false;st.textContent=''};
+ go1.onclick=async()=>{go1.disabled=true;const t=await ocr(f.files[0],st);go1.disabled=false;review(t,out)};
+ $('#view').replaceChildren(h('div',{class:'card'},h('h2',{},'📄 Scan a lab report (JPG/PNG)'),h('p',{class:'mut'},'We read the text on your device. Auto-read values can be wrong, so you confirm each one. PDF upload needs the backend (not in this version).'),f,img,h('div',{class:'row'},go1),st,out),labs?savedLabs():h('span'))};
+function review(t,out){const rows=LABS.map(([k,n,u,re])=>{const m=t.match(re),val=m?(m[1]||m[2]):'';return h('tr',{'data-k':k},h('td',{},n,h('br'),h('span',{class:'chip'},val?'Auto-read · verify':'Not found')),h('td',{},h('input',{type:'number',step:'any',value:val,'aria-label':n+' value'}),' '+u),h('td',{},h('input',{type:'number',step:'any','aria-label':n+' lab low'}),' – ',h('input',{type:'number',step:'any','aria-label':n+' lab high'})),h('td',{class:'s'},'—'),h('td',{},'Page 1'))});
+ const upd=()=>rows.forEach(r=>{const[v,lo,hi]=[...r.querySelectorAll('input')].map(i=>i.value===''?null:Number(i.value));const c=r.querySelector('.s');c.textContent=v==null?'—':(lo==null&&hi==null)?'Enter lab range':(hi!=null&&v>hi)?'High':(lo!=null&&v<lo)?'Low':'Within lab range'});
+ rows.forEach(r=>r.querySelectorAll('input').forEach(i=>i.oninput=upd));
+ const pre=h('pre',{style:'white-space:pre-wrap;font-size:.8rem'});pre.textContent=t;
+ out.replaceChildren(h('h3',{},'Confirm what we read'),al('w','Check digits, decimal points and units against your report. Enter the reference range printed on YOUR report to get a status. We never use a generic range.'),h('div',{class:'tb'},h('table',{},h('tr',{},...['Test','Value','Lab range','Status','Source'].map(x=>h('th',{},x))),...rows)),h('div',{class:'row'},h('button',{class:'b',type:'button',onclick:()=>{labs={ts:Date.now(),items:rows.map(r=>{const[v,lo,hi]=[...r.querySelectorAll('input')].map(i=>i.value===''?null:Number(i.value));const L2=LABS.find(x=>x[0]===r.dataset.k);return{name:L2[1],unit:L2[2],v,lo,hi,page:1}}).filter(x=>x.v!=null)};S.set('labs',labs);R.scan()}},'✔ Values are correct – save')),h('details',{},h('summary',{class:'mut'},'Raw scanned text'),pre));upd()}
+function labStatus(x){if(x.lo==null&&x.hi==null)return'No lab range entered';return(x.hi!=null&&x.v>x.hi)?'High':(x.lo!=null&&x.v<x.lo)?'Low':'Within lab range'}
+function savedLabs(){const c=h('div',{class:'card'},h('h2',{},'Saved results ('+new Date(labs.ts).toLocaleDateString()+')'));labs.items.forEach(x=>c.append(h('div',{class:'med'},h('span',{},h('b',{},x.name),' '+x.v+' '+x.unit),h('span',{class:'chip'},labStatus(x)))));c.append(h('p',{class:'mut'},'A result inside a lab range does not rule out illness, and one result cannot diagnose anything. Discuss with a clinician.'));return c}
+// ---- Medicines ----
+function addMeds(t){let n=0;DRUGS.forEach(d=>{if(d[2].test(t)&&!meds.includes(d[0])){meds.push(d[0]);n++}});return n}
+R.meds=()=>{const f=h('input',{type:'file',accept:'image/jpeg,image/png','aria-label':'Prescription image'}),st=h('p',{class:'mut',role:'status'}),ni=h('input',{placeholder:'Type a medicine name','aria-label':'Medicine name',maxlength:'60'});
+ const b=h('button',{class:'b',type:'button',onclick:async()=>{if(!f.files[0])return;const t=await ocr(f.files[0],st);const n=addMeds(t);st.textContent=n?'Found '+n+' known medicine(s). Please check the list.':'No known medicine names found. Try a clearer photo or type the name.';S.set('meds',meds);R.meds()}},'🔍 Read prescription');
+ const add=h('button',{class:'b',type:'button',onclick:()=>{const t=ni.value.trim().slice(0,60);if(!t)return;if(!addMeds(t)&&!meds.includes(t))meds.push(t);S.set('meds',meds);R.meds()}},'Add');
+ const list=h('div',{},...(meds.length?meds.map((m,i)=>{const d=DRUGS.find(x=>x[0]===m);return h('div',{class:'med'},h('div',{},h('b',{},m),h('br'),h('span',{class:'mut'},d?d[1]:'Not in our small list – ask your pharmacist')),h('button',{class:'b g',type:'button','aria-label':'Remove '+m,onclick:()=>{meds.splice(i,1);S.set('meds',meds);R.meds()}},'✕'))}):[h('p',{class:'mut'},'No medicines added yet.')]));
+ $('#view').replaceChildren(h('div',{class:'card'},h('h2',{},'💊 Add medicines'),medNote(),f,h('div',{class:'row'},b),st,h('div',{class:'row'},ni,add)),h('div',{class:'card'},h('h2',{},'My medicines'),interBox(),list,h('div',{class:'row'},h('button',{class:'b g',type:'button',onclick:()=>print()},'🖨 Print list for clinician'))))};
+// ---- Lifestyle ----
+const HAB=[['sleep','😴','Sleep',['7–8 h','5–6 h','Under 5 h'],'Keep a fixed bedtime and keep the phone away 30 minutes before sleep.'],['water','💧','Water',['8+ glasses','4–7','Under 4'],'Carry a bottle; drink a glass on waking and before meals.'],['move','🚶','Exercise',['30+ min daily','10–30 min','Almost none'],'Build up to a brisk 30-minute walk on most days if your doctor agrees.'],['sweet','🍬','Sweets / sugary drinks',['Rarely','Weekly','Daily'],'Try unsweetened tea or coffee, buttermilk or lemon water.'],['fried','🍟','Fried / oily food',['Rarely','Weekly','Daily'],'Prefer steamed or grilled food; keep fried snacks occasional.'],['salt','🧂','Salt, pickles, papad',['Low','Normal','High'],'Use less table salt; limit pickles and papad.'],['veg','🥦','Vegetables & fruit',['5+ servings','2–4','0–1'],'Add greens, a salad and a fruit each day.'],['stress','🧠','Stress',['Low','Moderate','High'],'Try 10 minutes of slow breathing or yoga; talk to someone you trust.']];
+R.life=()=>{const c=h('div',{class:'card'},h('h2',{},'🥗 Lifestyle & habits'),h('p',{class:'mut'},'Tap one option per habit. This is general wellness information, not a medical score.'));
+ HAB.forEach(x=>c.append(h('div',{class:'hab'},h('b',{},x[1]+' '+x[2]),h('div',{},...x[3].map((t,j)=>h('button',{class:'pill',type:'button','aria-pressed':String(life[x[0]]===j),onclick:()=>{life[x[0]]=j;S.set('life',life);R.life()}},t))))));
+ const todo=HAB.filter(x=>life[x[0]]>=1),done=HAB.filter(x=>life[x[0]]===0);const o=h('div',{class:'card'},h('h2',{},'Suggestions'));
+ if(Object.keys(life).length<HAB.length)o.append(h('p',{class:'mut'},'Answer all '+HAB.length+' habits ('+Object.keys(life).length+' done).'));
+ else{todo.forEach(x=>o.append(al('w',h('b',{},x[1]+' '+x[2]),h('br'),x[4])));if(done.length)o.append(al('o','✅ Keep doing: '+done.map(x=>x[2]).join(', ')));if(!todo.length)o.append(h('p',{class:'mut'},'Nothing to change from your answers. Keep your routine.'))}
+ $('#view').replaceChildren(c,o)};
+// ---- Dashboard ----
+R.home=()=>{const v=$('#view'),box=h('div',{class:'card'},h('h2',{},profile?'Your profile':'Create your profile'));
+ const nm=h('input',{id:'nm',maxlength:'80','aria-label':'Display name',placeholder:'Your name',value:profile?profile.name:''}),ag=h('input',{id:'ag',type:'number',min:'0',max:'100',step:'1',inputmode:'numeric','aria-label':'Age in years','aria-describedby':'ae',style:'width:110px',value:profile?profile.age:''}),ae=h('div',{id:'ae',role:'alert'});
+ const save=()=>{const r=validateAge(ag.value);ae.replaceChildren();if(!r.ok){ag.setAttribute('aria-invalid','true');ae.append(al('',r.e));return}if(!nm.value.trim()){ae.append(al('','Please enter a name.'));return}ag.removeAttribute('aria-invalid');profile={name:nm.value.trim(),age:r.v};S.set('profile',profile);R.home()};
+ box.append(h('div',{class:'row'},nm,ag,h('button',{class:'b',type:'button',onclick:save},'Save')),ae);
+ if(profile){const g=grp(profile.age);box.prepend(h('div',{class:'prof'},h('div',{class:'av',role:'img','aria-label':g[2]+' illustration'},g[1]),h('div',{},h('h2',{style:'margin:0'},'Hello, '+profile.name),h('span',{class:'chip'},g[2]))));if(profile.age<18)box.append(al('w','Under-18 profile: guardian and clinician guidance applies. Health tools here are designed for adults.'))}
+ const warn=h('div',{class:'card'},h('h2',{},'⚠️ Notices'));let n=0;
+ if(risk)risk.flags.forEach(f=>{n++;warn.append(al('','🚨 '+f))});
+ if(labs)labs.items.forEach(x=>{const s=labStatus(x);if(s==='High'||s==='Low'){n++;warn.append(al('w','🧪 '+x.name+': '+x.v+' '+x.unit+' is '+s+' versus the range on your report. Discuss with a clinician.'))}});
+ inter(meds).forEach(i=>{n++;warn.append(al(i[3],'💊 '+i[0]+' + '+i[1]+': '+i[2]))});
+ if(!n)warn.append(al('w','Nothing flagged from the information you have entered. This does not mean you are healthy.'));
+ const qa=h('div',{class:'card'},h('h2',{},'Quick actions'),h('div',{class:'row'},...['check','vitals','symp','scan','meds','life','learn'].map(k=>h('button',{class:'b g',type:'button',onclick:()=>go(k)},V[k][0]+' '+V[k][1]))));
+ v.replaceChildren(box,h('div',{class:'grid'},qa,warn))};
+R.priv=()=>{const ta=h('textarea',{rows:'8',readonly:'','aria-label':'Your data as JSON',style:'width:100%'});ta.value=JSON.stringify({profile,meds,labs,risk,life,vitals:vit},null,2);
+ $('#view').replaceChildren(h('div',{class:'card'},h('h2',{},'🔒 Privacy & your data'),h('p',{},'This version has no server or login. Everything is stored only in this browser (localStorage), unencrypted. Anyone using this device could read it. A hospital-grade, encrypted, account-based version needs the backend.'),h('p',{class:'mut'},'If you connect your own server (Account tab), your profile and uploaded reports are sent to that server. Third parties: Tesseract OCR code loads from jsDelivr. If you tap "Find nearby hospitals", your location is sent to OpenStreetMap Overpass.'),h('h3',{},'Export (copy)'),ta,h('div',{class:'row'},h('button',{class:'b',type:'button',onclick:()=>{ta.select();document.execCommand&&document.execCommand('copy')}},'Copy'),h('button',{class:'b no',type:'button',onclick:()=>{if(confirm('Delete ALL data stored by this app in this browser?')){['profile','meds','labs','risk','life','vitals'].forEach(k=>{try{localStorage.removeItem('hr_'+k)}catch{}});profile=labs=risk=null;meds=[];life={};vit=[];qi=0;ans={};go('home')}}},'Delete all my data'))))};
+// ---- Vitals (manual entry + Bluetooth heart-rate monitor) ----
+let vit=S.get('vitals',[]),devLive=null,devState='NOT CONNECTED',devName='',bt=null;
+const M=[['hr','Heart rate','bpm','Beats per minute at the time it was measured.'],['spo2','Oxygen saturation (SpO2)','%','Share of oxygen carried by the blood, estimated by a pulse oximeter.'],['bp','Blood pressure','mmHg','Pressure when the heart beats (systolic) and rests (diastolic).'],['temp','Body temperature','','Depends on where and how it is measured.'],['rr','Respiratory rate','breaths/min','Breaths per minute.']];
+const has=(e,k)=>k==='bp'?e.sys!=null:e[k]!=null;
+const fmt=t=>new Date(t).toLocaleString();
+function vitalCard(m){const idx=[];vit.forEach((e,i)=>has(e,m[0])&&idx.push(i));const c=h('div',{class:'card'},h('h2',{style:'font-size:1rem'},m[1]));
+ if(!idx.length){c.append(h('p',{class:'mut'},'No readings yet.'),h('details',{},h('summary',{class:'mut'},'What is this?'),m[3]));return c}
+ const e=vit[idx[idx.length-1]],p=idx.length>1?vit[idx[idx.length-2]]:null,k=m[0]==='bp'?'sys':m[0];
+ const val=m[0]==='bp'?e.sys+'/'+e.dia+' mmHg':m[0]==='temp'?e.temp+' °'+e.tu:e[m[0]]+' '+m[2];
+ const tr=p?(e[k]>p[k]?'▲ higher than previous':e[k]<p[k]?'▼ lower than previous':'■ same as previous'):'First reading – no trend yet';
+ c.append(h('div',{class:'big',style:'text-align:left;margin:4px 0'},val),h('div',{},h('span',{class:'chip'},e.src),h('span',{class:'chip'},fmt(e.ts)),...(Date.now()-e.ts>864e5?[h('span',{class:'chip'},'⏳ Older than 24 h')]:[])),h('p',{class:'mut'},tr+' · Not classified: no age-specific sourced rule is loaded, so no normal/abnormal label is shown.'),h('details',{},h('summary',{class:'mut'},'What does this mean?'),m[3]+' A normal-looking value does not rule out illness.'));return c}
+function updLive(){const l=$('#live');if(!l)return;l.textContent=devLive?devLive.bpm+' bpm · '+fmt(devLive.ts)+' · LIVE from '+devName:'No live reading'}
+async function btConnect(){if(!navigator.bluetooth){devState='UNSUPPORTED – this browser has no Web Bluetooth (try Chrome on Android or desktop).';R.vitals();return}
+ try{devState='CONNECTING…';R.vitals();const d=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}]});devName=d.name||'Unnamed device';
+  d.addEventListener('gattserverdisconnected',()=>{devState='DISCONNECTED';devLive=null;if(view==='vitals')R.vitals()});
+  const sv=await d.gatt.connect(),svc=await sv.getPrimaryService('heart_rate'),ch=await svc.getCharacteristic('heart_rate_measurement');await ch.startNotifications();
+  ch.addEventListener('characteristicvaluechanged',ev=>{const dv=ev.target.value,b=(dv.getUint8(0)&1)?dv.getUint16(1,true):dv.getUint8(1);if(b>=20&&b<=250)devLive={bpm:b,ts:Date.now()};else{devLive=null;devState='SENSOR ERROR – implausible value ignored'}updLive()});
+  bt=d;devState='CONNECTED'}catch(e){devState=(e&&e.name==='NotFoundError')?'NOT CONNECTED (no device chosen)':'ERROR: '+((e&&e.name)||'failed')+' – Bluetooth may be blocked here (permissions or embedded page).'}
+ if(view==='vitals')R.vitals()}
+R.vitals=()=>{const I=(id,l,mn,mx,st)=>h('label',{},l,h('br'),h('input',{id,type:'number',min:mn,max:mx,step:st||'1',style:'width:110px'}));const err=h('div',{role:'alert'}),tu=h('select',{id:'tu','aria-label':'Temperature unit'},h('option',{value:'C'},'°C'),h('option',{value:'F'},'°F'));
+ const save=()=>{const g=id=>{const v=$('#'+id).value.trim();return v===''?null:Number(v)};const o={hr:g('hr'),spo2:g('spo2'),sys:g('sys'),dia:g('dia'),temp:g('temp'),tu:tu.value,rr:g('rr')};const bad=[];
+  const R2=(k,n,a,b)=>{if(o[k]!=null&&(!Number.isFinite(o[k])||o[k]<a||o[k]>b))bad.push(n+' must be between '+a+' and '+b)};R2('hr','Heart rate',20,250);R2('spo2','SpO2',50,100);R2('rr','Respiratory rate',4,80);R2('sys','Systolic',50,300);R2('dia','Diastolic',30,200);if(o.temp!=null)tu.value==='C'?R2('temp','Temperature',30,45):R2('temp','Temperature',86,113);
+  if((o.sys==null)!==(o.dia==null))bad.push('Enter both systolic and diastolic');else if(o.sys!=null&&o.sys<=o.dia)bad.push('Systolic must be higher than diastolic');
+  if(!['hr','spo2','sys','temp','rr'].some(k=>o[k]!=null))bad.push('Enter at least one value');
+  if(bad.length){err.replaceChildren(al('',bad.join('. ')+'.'));return}
+  vit.push({ts:Date.now(),src:'Manual entry',...o});S.set('vitals',vit);R.vitals()};
+ const dev=h('div',{class:'card'},h('h2',{},'⌚ Bluetooth heart-rate monitor'),h('p',{},'Status: ',h('b',{},devState)),h('p',{},'Device: '+(devName||'none')+' · Supports: heart rate (standard Bluetooth profile). Pulse-oximeter and blood-pressure device protocols are not implemented yet.'),h('p',{id:'live',role:'status'},'No live reading'),
+  h('div',{class:'row'},h('button',{class:'b',type:'button',onclick:btConnect},'Connect (asks permission)'),h('button',{class:'b g',type:'button',onclick:()=>{if(bt&&bt.gatt.connected)bt.gatt.disconnect()}},'Disconnect'),h('button',{class:'b g',type:'button',onclick:()=>{if(!devLive){alert('No live reading to save.');return}vit.push({ts:devLive.ts,src:'Device: '+devName,hr:devLive.bpm,tu:'C'});S.set('vitals',vit);R.vitals()}},'Save current reading')),h('p',{class:'mut'},'Camera or microphone heart-rate is not offered because it is not clinically validated.'));
+ $('#view').replaceChildren(dev,h('div',{class:'card'},h('h2',{},'Add a manual reading'),h('div',{class:'row'},I('hr','Heart rate (bpm)',20,250),I('spo2','SpO2 (%)',50,100),I('sys','Systolic',50,300),I('dia','Diastolic',30,200),h('label',{},'Temperature',h('br'),h('input',{id:'temp',type:'number',step:'0.1',style:'width:90px'}),' ',tu),I('rr','Resp. rate',4,80)),h('div',{class:'row'},h('button',{class:'b',type:'button',onclick:save},'Save reading')),err),h('div',{class:'grid'},...M.map(vitalCard)),h('p',{class:'mut'},'Trend charts, steps, sleep and glucose need a connected data source and are not available yet.'));updLive()};
+// ---- Symptom information ----
+const RF=['Chest pain or pressure','Severe trouble breathing','Face drooping or slurred speech','Sudden weakness or numbness on one side','Severe bleeding that will not stop','Confusion or fainting','Swelling of lips/face or throat with breathing trouble','Thoughts of harming myself'];
+R.symp=()=>{if(!profile){$('#view').replaceChildren(h('div',{class:'card'},h('h2',{},'Set your profile first'),h('p',{class:'mut'},'The symptom tool uses your validated age.'),h('button',{class:'b',type:'button',onclick:()=>go('home')},'Go to Dashboard')));return}
+ const tx=h('textarea',{id:'sx',rows:'3',maxlength:'300','aria-label':'Describe your symptom',style:'width:100%'}),du=h('select',{'aria-label':'Duration'},...['Under 1 day','1–3 days','4–7 days','Over 1 week'].map(x=>h('option',{},x))),sv=h('select',{'aria-label':'Severity'},...['Mild','Moderate','Severe'].map(x=>h('option',{},x))),cb=RF.map(x=>h('input',{type:'checkbox'})),out=h('div');
+ const run=()=>{const s=tx.value.trim();if(!s){out.replaceChildren(al('','Please describe the symptom.'));return}const rf=RF.filter((x,i)=>cb[i].checked),minor=profile.age<18;let cat,msg,cls='o';
+  if(rf.length){cat='Emergency now';msg='Call 108 or 112 now. Do not wait or keep answering questions.';cls=''}else if(sv.value==='Severe'||(minor&&sv.value!=='Mild')){cat='Urgent – get care today';msg='See a doctor or urgent-care today. If it gets worse, call 108 or 112.'+(minor?' A parent/guardian should contact a paediatric clinician.':'');cls='w'}else if(sv.value==='Moderate'||du.value==='Over 1 week'){cat='See a clinician soon';msg='Book an appointment in the next few days.';cls='w'}else{cat='Self-care and monitor';msg='Rest, drink fluids and watch for changes. See a clinician if it lasts longer or gets worse.'}
+  const sm=h('p');sm.textContent='You described: "'+s+'" · lasting '+du.value+' · '+sv.value+' · age '+profile.age;
+  out.replaceChildren(h('div',{class:'card'},h('h2',{},'Your summary'),sm,al(cls,h('b',{},'Next step: '+cat),h('br'),msg),...(rf.includes(RF[7])?[al('','You are not alone. In India you can call Tele-MANAS at 14416 (please verify the number) or 112 right now.')]:[]),h('h3',{},'Questions for a clinician'),h('ul',{},h('li',{},'What could be causing this?'),h('li',{},'What should I watch for, and when should I come back?'),h('li',{},'Do my medicines or conditions change what I should do?')),h('p',{class:'mut'},'Possible explanations are not listed: a clinically reviewed knowledge base is required and none is loaded, so guessing is avoided. The next-step rules are v0 and have not been clinically reviewed. This is information, not a diagnosis.')));if(rf.length)emerg(rf)};
+ $('#view').replaceChildren(al('','🚨 Emergency signs? Call 108 or 112 now.'),h('div',{class:'card'},h('h2',{},'🩺 Symptom information'),h('label',{},'What are you feeling?',h('br'),tx),h('div',{class:'row'},h('label',{},'How long? ',du),h('label',{},'How bad? ',sv)),h('h3',{},'Any of these right now?'),...RF.map((x,i)=>h('label',{style:'display:block'},cb[i],' '+x)),h('div',{class:'row'},h('button',{class:'b',type:'button',onclick:run},'Get information'))),out)};
+// ---- Health tips ----
+const TIPS=[['💧','Hydration','Drink water regularly through the day; thirst, heat and activity change how much you need.'],['😴','Sleep','Keep regular sleep and wake times and a dark, quiet room.'],['🥗','Balanced nutrition','Include vegetables, fruit, whole grains and protein. Ask a clinician before restrictive diets.'],['🚶','Safe activity','Start gently and build up; stop and seek help for chest pain or severe breathlessness.'],['🩺','Preventive checkups','Ask your clinician which checks suit your age and history.'],['🧼','Hand hygiene','Wash hands with soap for 20 seconds before eating and after the toilet.'],['👀','Eye care','Every 20 minutes look at something 20 feet away for 20 seconds.'],['🧘','Stress','Try slow breathing, short walks and talking with someone you trust.'],['💊','Medication safety','Take medicines as prescribed, keep an up-to-date list, ask a pharmacist before mixing products.'],['🧪','Understanding lab tests','Compare results with the range printed on your own report and ask what changed over time.'],['📝','Appointment prep','Write symptoms, medicines and questions down before you go.']];
+R.learn=()=>$('#view').replaceChildren(h('p',{class:'mut'},'General education only. For detail see ',h('a',{href:'https://medlineplus.gov/',target:'_blank',rel:'noopener'},'MedlinePlus'),' and ',h('a',{href:'https://www.who.int/health-topics',target:'_blank',rel:'noopener'},'WHO health topics'),'.'),h('div',{class:'grid'},...TIPS.map(t=>h('div',{class:'card'},h('div',{class:'av',style:'width:64px;height:64px;font-size:2.2rem','aria-hidden':'true'},t[0]),h('h2',{style:'margin-top:8px'},t[1]),h('p',{},t[2])))));
+// ---- Server account & reports (requires the backend API) ----
+let API=S.get('api','')||'',user=null,srv='',rep=[],sel=null,resl=null,amsg='';
+async function api(path,opt={}){if(!API)throw new Error('Enter the server address first.');
+ const o={credentials:'include',...opt,headers:{'X-Requested-With':'HealthRiskAI',...(opt.json?{'Content-Type':'application/json'}:{}),...(opt.headers||{})}};
+ if(opt.json){o.body=JSON.stringify(opt.json);delete o.json}
+ const ac=new AbortController(),t=setTimeout(()=>ac.abort(),20000);o.signal=ac.signal;let r;
+ try{r=await fetch(API.replace(/\/$/,'')+path,o)}catch{throw new Error('Cannot reach the server.')}finally{clearTimeout(t)}
+ let d=null;try{d=await r.json()}catch{}
+ if(!r.ok)throw new Error((d&&(typeof d.detail==='string'?d.detail:d.details?d.details.map(x=>x.message).join(' '):d.error))||('Server error '+r.status));return d}
+const ISS={ocr_low_confidence:'Low OCR confidence – check the original',unit_unexpected:'Unexpected unit',missing_unit:'Unit missing',no_reference_range:'No lab range printed',implausible_value:'Implausible – check the decimal point',flag_conflict:'Lab flag disagrees with its range',duplicate_entry:'Possible duplicate',unrecognized_test:'Unrecognized test name',status_from_printed_flag_only:'Status taken from printed flag only'};
+const STL={high:'High vs lab range',low:'Low vs lab range',within_range:'Within lab range',indeterminate:'Indeterminate'};
+const fail=e=>{amsg=e.message;drawAcct()};
+async function acctInit(){try{await api('/health');srv='connected'}catch(e){srv='NOT CONNECTED – '+e.message;user=null;drawAcct();return}
+ try{user=await api('/api/v1/me');await loadReps()}catch{user=null}drawAcct()}
+async function loadReps(){rep=await api('/api/v1/reports')}
+async function openReview(id){try{resl=await api('/api/v1/reports/'+id+'/results');sel=id;drawAcct()}catch(e){fail(e)}}
+async function act(rid,id,body){try{await api('/api/v1/reports/'+rid+'/results/'+id,{method:'PUT',json:body});await loadReps();await openReview(rid)}catch(e){fail(e)}}
+async function dl(id){try{const r=await fetch(API.replace(/\/$/,'')+'/api/v1/reports/'+id+'/file',{credentials:'include'});if(!r.ok)throw new Error('Could not download.');window.open(URL.createObjectURL(await r.blob()),'_blank')}catch(e){fail(e)}}
+function drawAcct(){if(view!=='acct')return;
+ const ai=h('input',{placeholder:'https://your-server.example','aria-label':'Server address',value:API,style:'width:100%'});
+ const srvCard=h('div',{class:'card'},h('h2',{},'🔐 Server connection'),h('p',{class:'mut'},'Your own HealthRisk AI backend (see the project README). The published demo page cannot reach a server; use the downloaded frontend.'),ai,h('div',{class:'row'},h('button',{class:'b',type:'button',onclick:()=>{API=ai.value.trim();S.set('api',API);amsg='';srv=API?'checking…':'NOT CONNECTED – enter your server address';drawAcct();if(API)acctInit()}},'Save & check')),h('p',{role:'status'},'Status: ',h('b',{},srv||'NOT CONNECTED')),amsg?al('',amsg):h('span'));
+ const parts=[srvCard];
+ if(srv==='connected'&&!user){const em=h('input',{type:'email','aria-label':'Email',placeholder:'Email',autocomplete:'email'}),pw=h('input',{type:'password','aria-label':'Password',placeholder:'Password (10+ characters)',autocomplete:'current-password'});
+  const auth=p=>async()=>{try{user=await api('/api/v1/auth/'+p,{method:'POST',json:{email:em.value,password:pw.value}});amsg='';if(profile)await api('/api/v1/profile',{method:'PUT',json:{display_name:profile.name,age:profile.age}});await loadReps();drawAcct()}catch(e){fail(e)}};
+  parts.push(h('div',{class:'card'},h('h2',{},'Sign in or create an account'),h('div',{class:'row'},em,pw),h('div',{class:'row'},h('button',{class:'b',type:'button',onclick:auth('login')},'Sign in'),h('button',{class:'b g',type:'button',onclick:auth('register')},'Create account'))))}
+ if(user){const f=h('input',{type:'file',accept:'application/pdf,image/jpeg,image/png','aria-label':'Report file'});
+  parts.push(h('div',{class:'card'},h('h2',{},'Signed in as '+user.email),h('div',{class:'row'},h('button',{class:'b g',type:'button',onclick:async()=>{try{await api('/api/v1/auth/logout',{method:'POST'});user=null;rep=[];resl=null;sel=null;drawAcct()}catch(e){fail(e)}}},'Sign out'))),
+   h('div',{class:'card'},h('h2',{},'Upload a report'),h('p',{class:'mut'},'PDF, JPG or PNG up to 10 MB. The server checks the real file type.'),f,h('div',{class:'row'},h('button',{class:'b',type:'button',onclick:async()=>{if(!f.files[0]){amsg='Choose a file first.';drawAcct();return}try{const fd=new FormData();fd.append('file',f.files[0]);const r=await api('/api/v1/reports',{method:'POST',body:fd});amsg=r.duplicate?'This file was already uploaded.':'Uploaded.';await loadReps();drawAcct()}catch(e){fail(e)}}},'Upload'))),
+   h('div',{class:'card'},h('h2',{},'My reports'),...(rep.length?rep.map(r=>h('div',{class:'med'},h('span',{},'Report #'+r.id+' · '+r.kind.toUpperCase()+' · ',h('span',{class:'chip'},r.status)),h('span',{},h('button',{class:'b g',type:'button',onclick:async()=>{try{amsg='Processing…';drawAcct();const x=await api('/api/v1/reports/'+r.id+'/process',{method:'POST'});amsg=x.message||'Found '+x.count+' results – please review them.';await loadReps();await openReview(r.id)}catch(e){await loadReps().catch(()=>{});fail(e)}}},'Scan'),' ',h('button',{class:'b g',type:'button',onclick:()=>openReview(r.id)},'Review'),' ',h('button',{class:'b g',type:'button',onclick:()=>dl(r.id)},'Original')))):[h('p',{class:'mut'},'No reports yet.')])));
+  if(resl){const c=h('div',{class:'card'},h('h2',{},'Review results – report #'+sel+' ('+resl.status+')'),al('w',resl.notice+' Check every value against the original page.'),...Object.entries(resl.dates||{}).map(([k,v])=>h('p',{class:'mut'},k+' date as printed: '+v.text+' (page '+v.page+')')));
+   if(!resl.results.length)c.append(h('p',{class:'mut'},'No values recognised. The image may be unclear or the layout unsupported.'));
+   resl.results.forEach(x=>c.append(h('div',{class:'med',style:'display:block'},h('div',{},h('b',{},x.name),' · page '+x.page+' · '+x.value_text+' '+(x.unit||'(no unit)')+' · lab range: '+(x.reference_range||'none printed')+(x.printed_flag?' · printed flag '+x.printed_flag:'')),h('div',{},h('span',{class:'chip'},STL[x.status]||x.status),h('span',{class:'chip'},'State: '+x.review_state),...x.issues.map(i=>h('span',{class:'chip'},'⚠ '+(ISS[i]||i)))),h('p',{class:'mut'},'Source text: '+x.source_text+(x.corrected_value_text?' · Your correction: '+x.corrected_value_text+' '+(x.corrected_unit||''):'')),h('div',{class:'row',style:'margin-top:4px'},h('button',{class:'b g',type:'button',onclick:()=>act(sel,x.id,{action:'confirm'})},'✔ Correct'),h('button',{class:'b g',type:'button',onclick:()=>{const v=prompt('Corrected value (numbers only, e.g. 13.5)',x.value_text);if(v!==null)act(sel,x.id,{action:'correct',value_text:v})}},'✎ Fix value'),h('button',{class:'b g',type:'button',onclick:()=>act(sel,x.id,{action:'reject'})},'✕ Wrong / ignore')))));
+   parts.push(c)}}
+ $('#view').replaceChildren(...parts)}
+R.acct=()=>{srv=API?'checking…':'NOT CONNECTED – enter your server address';amsg='';drawAcct();if(API)acctInit()};
+// ---- Emergency ----
+let ctx=null,osc=null;function stopSiren(){if(ctx){ctx.close();ctx=null}}
+function emerg(f){$('#why').textContent=f.join(' • ');$('#em').hidden=false;$('#hl').replaceChildren();$('#emx').focus()}
+$('#sos').onclick=()=>emerg(['SOS pressed – get help now']);$('#emx').onclick=()=>{stopSiren();$('#em').hidden=true};
+$('#siren').onclick=()=>{if(ctx){stopSiren();return}ctx=new(window.AudioContext||window.webkitAudioContext)();const o=ctx.createOscillator(),g=ctx.createGain();g.gain.value=.12;o.type='square';o.connect(g);g.connect(ctx.destination);o.start();let x=0;const t=setInterval(()=>{if(!ctx){clearInterval(t);return}o.frequency.value=(x=!x)?900:600},500)};
+const dist=(a,b,c,d)=>{const t=x=>x*Math.PI/180,p=Math.sin(t(c-a)/2)**2+Math.cos(t(a))*Math.cos(t(c))*Math.sin(t(d-b)/2)**2;return 12742*Math.asin(Math.sqrt(p))};
+$('#hosp').onclick=()=>{const hl=$('#hl');if(!confirm('Your location will be sent to OpenStreetMap Overpass to find hospitals. Continue?'))return;hl.replaceChildren(h('li',{},'Finding your location…'));
+ navigator.geolocation.getCurrentPosition(async p=>{const{latitude:la,longitude:lo}=p.coords;try{const q='[out:json][timeout:20];(node[amenity=hospital](around:8000,'+la+','+lo+');way[amenity=hospital](around:8000,'+la+','+lo+'););out center 25;';const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q)});const d=await r.json();
+ const L3=d.elements.map(e=>({n:(e.tags&&e.tags.name)||'Hospital',la:e.lat??e.center.lat,lo:e.lon??e.center.lon,ph:e.tags&&(e.tags.phone||e.tags['contact:phone'])})).map(x=>({...x,km:dist(la,lo,x.la,x.lo)})).sort((a,b)=>a.km-b.km).slice(0,6);
+ hl.replaceChildren(...(L3.length?L3.map(x=>h('li',{},h('b',{},x.n),' – '+x.km.toFixed(1)+' km',h('br'),h('a',{href:'https://www.google.com/maps/dir/?api=1&destination='+x.la+','+x.lo,target:'_blank',rel:'noopener'},'🧭 Navigate'),...(x.ph?[h('a',{href:'tel:'+String(x.ph).replace(/[^+\d]/g,'')},'📞 Call')]:[]))):[h('li',{},'No hospitals found nearby. Call 108 / 112.')]))}catch{hl.replaceChildren(h('li',{},'Could not load hospitals. Call 108 / 112.'))}},()=>hl.replaceChildren(h('li',{},'Location blocked. Call 108 / 112 now.')),{timeout:10000})};
+$('#lang').onchange=e=>{lang=e.target.value;document.documentElement.lang=lang;if(view==='check')R.check()};
+$('#theme').onclick=()=>{const r=document.documentElement,d=r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);r.dataset.theme=d?'light':'dark'};
+go('home');
+</script></body></html>
